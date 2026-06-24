@@ -48,17 +48,14 @@
 - **Şehir Filtresi:** Kanal detay sayfasında şehre göre gönderi filtresi var.
 - **Yorum Sayısı:** Yorumlar butonu "Yorumlar (3)" şeklinde sayıyı gösterir (yüklenince).
 - **PostCard Spacing:** Rozet ile başlık arasında `mb-3` boşluk.
-- **Alt Forumlar:** Hiyerarşik alt kategoriler oluşturulabilir.
-- **Admin Düzenleme:** Admin inline kanal düzenleme yapabilir.
-
-### 5. Admin Yönetimi (`Admin.jsx`)
-- Kullanıcı onaylama (onaylayınca Brevo e-postası gider), admin rolü, askıya alma, silme.
+- **Admin Yönetimi:** Kullanıcı onaylama (onaylayınca Brevo e-postası gider), admin rolü, askıya alma, silme (artık veritabanından tamamen siler).
+- **Çıkış Yap Yönlendirmesi:** `Pending.jsx` sayfasında onay bekleyen kullanıcılar "Çıkış Yap" butonuna bastığında otomatik olarak `/giris` sayfasına yönlendirilir.
 
 ### 6. Arayüz ve Tasarım
 - **Mobil Header:** `md:hidden` fixed header — sol "Alamancı" başlığı, sağ mesajlar ikonu. Mesaj ikonu üzerinde okunmamış mesaj sayısı kırmızı badge gösterilir, `/mesajlar`'a girilince sıfırlanır.
 - **iOS Safari Zoom Fix:** `maximum-scale=1.0` viewport meta ile otomatik zoom önlendi.
 - **Navigasyon:** BottomNav (mobil) + TopNav (masaüstü).
-- **PWA Desteği:** Manifest ve service worker.
+- **PWA Desteği:** Manifest, service worker, akıllı PWA yükleme yönlendirmesi (`PWAInstallPrompt.jsx` - iOS ve Android için özel yükleme akışları sunar, bilgisayarlarda `lg:hidden` ile gizlenir) ve 3D "A" logosu (`favicon.svg`, `pwa-192x192.png`, `pwa-512x512.png`, `apple-touch-icon.png` dosyaları güncellendi).
 
 ### 7. Mesajlaşma
 - **FloatingChat.jsx:** Hook violation düzeltildi — `isMessagesPage` kontrolü tüm hook'lardan sonra yapılır. `/mesajlar` sayfasında FloatingChat render edilmez.
@@ -67,16 +64,22 @@
 - **DM:** Yalnızca arkadaşlar arası. Realtime ile anlık.
 - **Etkinlik Sohbet Odaları:** Her etkinlikte canlı sohbet.
 
+### 8. Aile ve Medeni Durum
+- **Profil Girişi:** `Profile.jsx` sayfasında "Medeni Durum" (Evli, Bekar, İlişkisi Var) ve "Çocuk Sayısı" alanları düzenlenebilir ve görüntülenebilir.
+- **Üye Keşfetme Filtreleri:** `Members.jsx` sayfasına medeni durum ve çocuk sahibi (ebeveyn) olma durumuna göre arama/filtreleme seçenekleri eklendi. Üye kartlarında aile durumları gösterilir.
+
 ## Supabase DB Notları
-- `profiles` tablosu: `id, username, full_name, avatar_url, is_admin, status, city, occupation, hobbies, interests, age, gender, email`
+- `profiles` tablosu: `id, username, full_name, avatar_url, is_admin, status, city, occupation, hobbies, interests, age, gender, email, marital_status, children_count`
 - `events` tablosu: `city` kolonu eklendi
 - `posts` tablosu: `city` kolonu eklendi
 - Tablolar: `friendships`, `direct_messages`, `event_messages`, `rsvps`, `comments`, `channels`, `posts`, `events`, `profiles`
 - RLS: `security definer` fonksiyonları (`get_is_admin()`, `get_is_approved()`)
-- Auth trigger `handle_new_user()`: yeni kayıtta `profiles`'a email de kaydedilir
+- Auth trigger `handle_new_user()`: yeni kayıtta `profiles`'a email de kaydedilir.
+- **Otomatik Onay E-postası Tetikleyicisi:** `profiles` tablosunda `status` değeri `'approved'` olarak güncellendiğinde `public.handle_status_approved` tetikleyicisi üzerinden Brevo API'si (`net.http_post`) doğrudan çağrılır ve otomatik mail gönderilir.
+- **Güvenli Üye Silme (RPC):** `public.delete_user` fonksiyonu ile bir üye silindiğinde hem `auth.users` kaydı hem de buna bağlı tüm veriler (profiles, posts, friendships, messages vb.) cascade olarak tamamen silinir.
 
 ## Supabase Edge Functions
-- `send-approval-email`: Brevo API ile onay e-postası gönderir. Secret: `BREVO_API_KEY`.
+- `send-approval-email` (Alternatif/Yedek): Brevo API ile onay e-postası gönderen Deno/TypeScript fonksiyonu. (Projeye `supabase/` klasörü altına eklendi, ancak şu an veritabanı tetikleyicisi aktif olarak kullanılmaktadır).
 
 ## Proje Yapısı
 ```
@@ -87,14 +90,14 @@ src/
     ChannelDetail.jsx — Kanal gönderileri, şehir filtresi, admin düzenleme
     Events.jsx        — Etkinlik listesi + oluşturma (datetime-local)
     EventDetail.jsx   — Etkinlik detayları, RSVP, sohbet
-    Admin.jsx         — Kullanıcı yönetimi + Brevo e-posta bildirimi
+    Admin.jsx         — Kullanıcı yönetimi (silme işlemi güvenli RPC'ye bağlandı)
     Friends.jsx       — Arkadaşlık yönetimi
-    Members.jsx       — Üye arama ve harita
+    Members.jsx       — Üye arama (Medeni durum ve Çocuk filtreleri eklendi)
     Messages.jsx      — DM merkezi (mobil uyumlu)
-    Profile.jsx       — Profil düzenleme (ilk girişte otomatik açılır)
+    Profile.jsx       — Profil düzenleme (Medeni durum ve Çocuk bilgileri eklendi)
     Login.jsx         — Giriş
     Register.jsx      — Kayıt (şehir, meslek, autocomplete)
-    Pending.jsx       — Onay bekleyen ekran (e-posta bildirim açıklaması)
+    Pending.jsx       — Onay bekleyen ekran (çıkış yapınca otomatik /giris yönlendirmesi)
   components/
     PostCard.jsx        — Gönderi kartı (yorum sayısı, şehir badge, spacing)
     CreatePostModal.jsx — Gönderi oluşturma (isteğe bağlı şehir)
@@ -103,7 +106,8 @@ src/
     MemberMap.jsx       — Üye haritası (boş state mesajı)
     AutocompleteInput.jsx — Şehir/meslek dropdown (sadece yazarken göster)
     FloatingChat.jsx    — Yüzen sohbet (hook violation düzeltildi)
-    Layout.jsx          — Sarmal: mobil header (Alamancı + mesaj ikonu + badge), realtime DM dinleyici
+    Layout.jsx          — Sarmal: mobil header, realtime DM dinleyici
+    PWAInstallPrompt.jsx — PWA yükleme yönlendirmesi (iOS/Android destekli)
     TopNav.jsx          — Masaüstü navigasyon
     BottomNav.jsx       — Mobil alt navigasyon
   contexts/
