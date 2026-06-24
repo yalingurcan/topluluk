@@ -168,7 +168,7 @@ export default function Events() {
                 { key: 'title', label: 'Başlık', type: 'text', required: true },
                 { key: 'event_date', label: 'Tarih ve Saat', type: 'datetime-local', required: true },
                 { key: 'location', label: 'Konum', type: 'text' },
-                { key: 'cover_image_url', label: 'Kapak Görseli URL', type: 'url' },
+                { key: 'cover_image_url', label: 'Kapak Görseli URL', type: 'text' },
               ].map(({ key, label, type, required }) => (
                 <div key={key}>
                   <label className="text-xs font-medium text-gray-700 mb-1 block">{label}</label>
