@@ -21,7 +21,7 @@ export default function Events() {
 
   async function fetchData() {
     const [{ data: ev }, { data: myRsvps }] = await Promise.all([
-      supabase.from('events').select('*, profiles(full_name)').order('event_date', { ascending: true }),
+      supabase.from('events').select('*, profiles!events_created_by_fkey(full_name)').order('event_date', { ascending: true }),
       supabase.from('rsvps').select('event_id, status').eq('user_id', profile.id)
     ])
     setEvents(ev || [])
@@ -57,7 +57,7 @@ export default function Events() {
         event_date,
         created_by: profile.id
       })
-      .select('*, profiles(full_name)')
+      .select('*, profiles!events_created_by_fkey(full_name)')
       .single()
     setCreating(false)
     if (error) { setCreateError(error.message); return }

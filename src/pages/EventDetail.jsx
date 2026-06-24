@@ -22,7 +22,7 @@ export default function EventDetail() {
 
   async function fetchData() {
     const [{ data: ev }, { data: allRsvps }] = await Promise.all([
-      supabase.from('events').select('*, profiles(full_name)').eq('id', id).single(),
+      supabase.from('events').select('*, profiles!events_created_by_fkey(full_name)').eq('id', id).single(),
       supabase.from('rsvps').select('*, profiles(full_name)').eq('event_id', id)
     ])
     setEvent(ev)
