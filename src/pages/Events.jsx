@@ -13,6 +13,8 @@ export default function Events() {
   const [rsvps, setRsvps] = useState({})
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [createError, setCreateError] = useState('')
+  const [creating, setCreating] = useState(false)
   const [form, setForm] = useState({ title: '', description: '', location: '', event_date: '', cover_image_url: '' })
 
   useEffect(() => { fetchData() }, [])
@@ -42,11 +44,23 @@ export default function Events() {
 
   async function handleCreate(e) {
     e.preventDefault()
-    const { data } = await supabase
+    setCreateError('')
+    setCreating(true)
+    const insertData = {
+      title: form.title,
+      description: form.description || null,
+      location: form.location || null,
+      event_date: form.event_date,
+      cover_image_url: form.cover_image_url || null,
+      created_by: profile.id
+    }
+    const { data, error } = await supabase
       .from('events')
-      .insert({ ...form, created_by: profile.id })
+      .insert(insertData)
       .select('*, profiles(full_name)')
       .single()
+    setCreating(false)
+    if (error) { setCreateError(error.message); return }
     if (data) setEvents(ev => [data, ...ev])
     setForm({ title: '', description: '', location: '', event_date: '', cover_image_url: '' })
     setShowCreate(false)
@@ -176,7 +190,8 @@ export default function Events() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                 />
               </div>
-              <button type="submit" className="w-full bg-primary-600 text-white py-2.5 rounded-xl font-medium text-sm">Etkinlik Oluştur</button>
+              {createError && <div className="bg-red-50 text-red-700 text-xs px-3 py-2 rounded-lg">{createError}</div>}
+              <button type="submit" disabled={creating} className="w-full bg-primary-600 text-white py-2.5 rounded-xl font-medium text-sm disabled:opacity-60">{creating ? 'Oluşturuluyor...' : 'Etkinlik Oluştur'}</button>
             </form>
           </div>
         </div>
