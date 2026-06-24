@@ -17,7 +17,7 @@ export default function Events() {
   const [showCreate, setShowCreate] = useState(false)
   const [createError, setCreateError] = useState('')
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', location: '', city: '', date: '', time: '', is_private: false })
+  const [form, setForm] = useState({ title: '', description: '', location: '', city: '', datetime: '', is_private: false })
   const [viewMode, setViewMode] = useState('list')
 
   useEffect(() => { fetchData() }, [])
@@ -48,9 +48,9 @@ export default function Events() {
   async function handleCreate(e) {
     e.preventDefault()
     setCreateError('')
-    if (!form.date || !form.time) { setCreateError('Tarih ve saat zorunludur.'); return }
+    if (!form.datetime) { setCreateError('Tarih ve saat zorunludur.'); return }
     setCreating(true)
-    const event_date = `${form.date}T${form.time}:00`
+    const event_date = `${form.datetime}:00`
     const { data, error } = await supabase
       .from('events')
       .insert({
@@ -67,7 +67,7 @@ export default function Events() {
     setCreating(false)
     if (error) { setCreateError(error.message); return }
     if (data) setEvents(ev => [data, ...ev].sort((a, b) => new Date(a.event_date) - new Date(b.event_date)))
-    setForm({ title: '', description: '', location: '', city: '', date: '', time: '', is_private: false })
+    setForm({ title: '', description: '', location: '', city: '', datetime: '', is_private: false })
     setShowCreate(false)
   }
 
@@ -231,27 +231,15 @@ export default function Events() {
                   placeholder="Etkinlik adı"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">Tarih *</label>
-                  <input
-                    required
-                    type="date"
-                    value={form.date}
-                    onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">Saat *</label>
-                  <input
-                    required
-                    type="time"
-                    value={form.time}
-                    onChange={e => setForm(f => ({ ...f, time: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Tarih ve Saat *</label>
+                <input
+                  required
+                  type="datetime-local"
+                  value={form.datetime}
+                  onChange={e => setForm(f => ({ ...f, datetime: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1 block">Konum</label>

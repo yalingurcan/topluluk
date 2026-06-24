@@ -47,11 +47,6 @@ export default function Admin() {
 
     if (user) {
       setMembers(m => [...m, { ...user, status: 'approved' }].sort((a, b) => a.full_name?.localeCompare(b.full_name)))
-
-      // E-posta bildirimi gönder
-      supabase.functions.invoke('send-approval-email', {
-        body: { email: user.email, full_name: user.full_name }
-      }).catch(err => console.error('Email gönderilemedi:', err))
     }
   }
 

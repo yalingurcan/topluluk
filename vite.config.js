@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Topluluk',
-        short_name: 'Topluluk',
-        description: 'Topluluk uygulaması',
+        name: 'Alamancı',
+        short_name: 'Alamancı',
+        description: 'Alamancı Topluluk Uygulaması',
         theme_color: '#6366f1',
         background_color: '#ffffff',
         display: 'standalone',

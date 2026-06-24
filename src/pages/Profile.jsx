@@ -29,7 +29,9 @@ export default function Profile() {
     hobbies: '',
     interests: '',
     age: '',
-    gender: ''
+    gender: '',
+    marital_status: '',
+    children_count: ''
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -94,7 +96,9 @@ export default function Profile() {
         hobbies: profile.hobbies || '',
         interests: profile.interests || '',
         age: profile.age || '',
-        gender: profile.gender || ''
+        gender: profile.gender || '',
+        marital_status: profile.marital_status || '',
+        children_count: profile.children_count !== undefined && profile.children_count !== null ? String(profile.children_count) : ''
       })
     }
   }, [profile, editMode])
@@ -110,7 +114,9 @@ export default function Profile() {
       hobbies: form.hobbies,
       interests: form.interests,
       age: form.age ? parseInt(form.age) : null,
-      gender: form.gender
+      gender: form.gender,
+      marital_status: form.marital_status,
+      children_count: form.children_count ? parseInt(form.children_count) : 0
     }
     await supabase.from('profiles').update(updates).eq('id', profile.id)
     await refreshProfile()
@@ -214,6 +220,33 @@ export default function Profile() {
                   <option value="Kadın">Kadın</option>
                   <option value="Diğer">Diğer</option>
                 </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Medeni Durum</label>
+                <select
+                  value={form.marital_status}
+                  onChange={e => setForm(f => ({ ...f, marital_status: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">Belirtilmemiş</option>
+                  <option value="Evli">Evli</option>
+                  <option value="Bekar">Bekar</option>
+                  <option value="İlişkisi Var">İlişkisi Var</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Çocuk Sayısı</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.children_count}
+                  onChange={e => setForm(f => ({ ...f, children_count: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Örn: 0 veya boş bırakın"
+                />
               </div>
             </div>
 
@@ -374,6 +407,18 @@ export default function Profile() {
               <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
                 <span className="text-gray-400 font-medium">⚧ Cinsiyet</span>
                 <span className="text-gray-900 font-semibold">{profile?.gender || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
+                <span className="text-gray-400 font-medium">💍 Medeni Durum</span>
+                <span className="text-gray-900 font-semibold">{profile?.marital_status || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
+                <span className="text-gray-400 font-medium">👶 Çocuk Sayısı</span>
+                <span className="text-gray-900 font-semibold">
+                  {profile?.children_count !== undefined && profile?.children_count !== null
+                    ? (profile.children_count === 0 ? 'Yok' : `${profile.children_count} Çocuk`)
+                    : '-'}
+                </span>
               </div>
               <div className="border-b border-gray-50 pb-3.5">
                 <span className="text-gray-400 font-medium block mb-2">🎨 Hobiler</span>

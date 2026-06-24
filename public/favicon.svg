@@ -1,4 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="20" fill="#6366f1"/>
-  <path d="M50 25a15 15 0 1 0 0 30 15 15 0 0 0 0-30zM25 75c0-13.8 11.2-25 25-25s25 11.2 25 25" stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="50%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    
+    <!-- Left Ribbon Gradient (Bright White/Indigo) -->
+    <linearGradient id="left-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+
+    <!-- Right Ribbon Gradient (Slightly darker for depth) -->
+    <linearGradient id="right-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#daccff"/>
+      <stop offset="100%" stop-color="#b19eff"/>
+    </linearGradient>
+
+    <!-- Crossbar Gradient -->
+    <linearGradient id="cross-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#e0e7ff" stop-opacity="0.75"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Premium Rounded Icon Background -->
+  <rect width="512" height="512" rx="115" fill="url(#bg-grad)"/>
+
+  <!-- Overall 3D Shadow of the "A" (Vector-based, high compatibility) -->
+  <g fill="#000000" opacity="0.2" transform="translate(0, 10)">
+    <path d="M 232 100 L 292 100 L 392 400 L 332 400 Z"/>
+    <path d="M 120 400 L 220 100 L 280 100 L 180 400 Z"/>
+    <path d="M 215 285 L 297 285 L 305 320 L 203 320 Z"/>
+  </g>
+
+  <!-- Right Leg (Back layer) -->
+  <path d="M 232 100 L 292 100 L 392 400 L 332 400 Z" fill="url(#right-grad)"/>
+  
+  <!-- Left Leg Shadow (Casted onto Right Leg & Crossbar to create depth) -->
+  <path d="M 280 100 L 300 100 L 200 400 L 180 400 Z" fill="#000000" opacity="0.15"/>
+
+  <!-- Folded Crossbar (Middle layer, connecting them) -->
+  <path d="M 215 285 L 297 285 L 305 320 L 203 320 Z" fill="url(#cross-grad)"/>
+  
+  <!-- Left Leg (Front layer, overlapping at top) -->
+  <path d="M 120 400 L 220 100 L 280 100 L 180 400 Z" fill="url(#left-grad)"/>
 </svg>

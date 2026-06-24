@@ -1,7 +1,16 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Pending() {
-  const { signOut } = useAuth()
+  const { session, loading, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && !session) {
+      navigate('/giris', { replace: true })
+    }
+  }, [session, loading, navigate])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

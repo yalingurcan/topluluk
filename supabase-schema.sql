@@ -279,7 +279,9 @@ alter table profiles
   add column if not exists hobbies text,
   add column if not exists interests text,
   add column if not exists age integer,
-  add column if not exists gender text;
+  add column if not exists gender text,
+  add column if not exists marital_status text,
+  add column if not exists children_count integer default 0;
 
 -- ─────────────────────────────────────────────
 -- EVENTS EXTRA FIELD (is_private)
@@ -366,4 +368,55 @@ create policy "Approved members can send event messages" on event_messages
 -- FIRST ADMIN SETUP
 -- After running schema, manually set your user as admin:
 -- UPDATE profiles SET is_admin = true, status = 'approved' WHERE id = '<your-user-uuid>';
+-- ─────────────────────────────────────────────
+
+-- ─────────────────────────────────────────────
+-- AUTOMATIC APPROVAL EMAIL TRIGGER (via Brevo API)
+-- ─────────────────────────────────────────────
+create or replace function public.handle_status_approved()
+returns trigger as $$
+begin
+  if NEW.status = 'approved' and (OLD.status is null or OLD.status != 'approved') and NEW.email is not null then
+    perform net.http_post(
+      url := 'https://api.brevo.com/v3/smtp/email',
+      headers := jsonb_build_object(
+        'api-key', 'YOUR_BREVO_API_KEY_HERE',
+        'Content-Type', 'application/json'
+      ),
+      body := jsonb_build_object(
+        'sender', jsonb_build_object('name', 'Alamancı', 'email', 'info@eylaconsulting.com'),
+        'to', jsonb_build_array(jsonb_build_object('email', NEW.email, 'name', NEW.full_name)),
+        'subject', 'Alamancı Üyeliğiniz Onaylandı! 🎉',
+        'htmlContent', concat(
+          '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 12px;">',
+          '<h2 style="color: #4f46e5;">Merhaba ', NEW.full_name, ',</h2>',
+          '<p style="font-size: 16px; color: #374151; line-height: 1.6;">',
+          'Alamancı topluluğuna yaptığınız üyelik başvurusu incelenmiş ve <strong>onaylanmıştır</strong>! 🎉',
+          '</p>',
+          '<p style="font-size: 16px; color: #374151; line-height: 1.6;">',
+          'Artık sisteme giriş yaparak profilinizi güncelleyebilir, etkinliklere katılabilir ve diğer üyelerle iletişime geçebilirsiniz.',
+          '</p>',
+          '<div style="margin: 30px 0; text-align: center;">',
+          '<a href="https://alamanci.netlify.app" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">',
+          'Giriş Yap ve Keşfet',
+          '</a>',
+          '</div>',
+          '<hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 30px 0;" />',
+          '<p style="font-size: 12px; color: #9ca3af; text-align: center;">',
+          'Bu e-posta Alamancı Topluluk Yönetimi tarafından otomatik olarak gönderilmiştir.',
+          '</p>',
+          '</div>'
+        )
+      )
+    );
+  end if;
+  return NEW;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_profile_approved on public.profiles;
+create trigger on_profile_approved
+  after update on public.profiles
+  for each row
+  execute function public.handle_status_approved();
 -- ─────────────────────────────────────────────

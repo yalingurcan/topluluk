@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import BottomNav from './BottomNav'
 import TopNav from './TopNav'
 import FloatingChat from './FloatingChat'
+import PWAInstallPrompt from './PWAInstallPrompt'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -70,6 +71,7 @@ export default function Layout() {
       </main>
       {profile && profile.status === 'approved' && <FloatingChat />}
       <BottomNav />
+      <PWAInstallPrompt />
     </div>
   )
 }

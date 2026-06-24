@@ -12,6 +12,8 @@ export default function Members() {
   const [search, setSearch] = useState('')
   const [cityFilter, setCityFilter] = useState('')
   const [occupationFilter, setOccupationFilter] = useState('')
+  const [maritalFilter, setMaritalFilter] = useState('')
+  const [childrenFilter, setChildrenFilter] = useState('')
   const [viewMode, setViewMode] = useState('list')
 
   useEffect(() => {
@@ -99,8 +101,10 @@ export default function Members() {
 
     const matchesCity = !cityFilter || m.city?.toLowerCase().includes(cityFilter.toLowerCase())
     const matchesOccupation = !occupationFilter || m.occupation?.toLowerCase().includes(occupationFilter.toLowerCase())
+    const matchesMarital = !maritalFilter || m.marital_status === maritalFilter
+    const matchesChildren = !childrenFilter || (childrenFilter === 'has_children' && m.children_count > 0)
 
-    return matchesSearch && matchesCity && matchesOccupation
+    return matchesSearch && matchesCity && matchesOccupation && matchesMarital && matchesChildren
   })
 
   // For geographic map count (apply filters except city to see density across all cities)
@@ -187,6 +191,31 @@ export default function Members() {
             </select>
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <select
+              value={maritalFilter}
+              onChange={e => setMaritalFilter(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">Tüm Medeni Durumlar</option>
+              <option value="Evli">Evli</option>
+              <option value="Bekar">Bekar</option>
+              <option value="İlişkisi Var">İlişkisi Var</option>
+            </select>
+          </div>
+          <div>
+            <select
+              value={childrenFilter}
+              onChange={e => setChildrenFilter(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">Aile Durumu (Tümü)</option>
+              <option value="has_children">Sadece Çocuklu (Ebeveyn)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {viewMode === 'map' && !loading && (
@@ -252,6 +281,17 @@ export default function Members() {
                       <span>💼</span>
                       <span>{m.occupation || 'Belirtilmemiş'}</span>
                     </div>
+                    {(m.marital_status || (m.children_count !== undefined && m.children_count !== null)) && (
+                      <div className="flex items-center gap-1.5 text-indigo-600 font-medium">
+                        <span>👪</span>
+                        <span>
+                          {[
+                            m.marital_status,
+                            m.children_count > 0 ? `${m.children_count} Çocuklu` : (m.children_count === 0 ? 'Çocuksuz' : null)
+                          ].filter(Boolean).join(' | ')}
+                        </span>
+                      </div>
+                    )}
 
                     {m.hobbies && (
                       <div className="pt-2 border-t border-gray-50">

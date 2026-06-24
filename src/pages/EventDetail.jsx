@@ -35,7 +35,7 @@ export default function EventDetail() {
       supabase.from('event_comments').select('*, profiles(full_name)').eq('event_id', id).order('created_at', { ascending: true })
     ])
     setEvent(ev)
-    setForm({ title: ev?.title, description: ev?.description, location: ev?.location, date: ev?.event_date?.slice(0, 10) || '', time: ev?.event_date?.slice(11, 16) || '' })
+    setForm({ title: ev?.title, description: ev?.description, location: ev?.location, datetime: ev?.event_date?.slice(0, 16) || '' })
     setRsvps(allRsvps || [])
     setComments(allComments || [])
     setMyRsvp((allRsvps || []).find(r => r.user_id === profile.id)?.status || null)
@@ -58,7 +58,7 @@ export default function EventDetail() {
   }
 
   async function handleSave() {
-    const event_date = `${form.date}T${form.time}:00`
+    const event_date = `${form.datetime}:00`
     const updates = { title: form.title, description: form.description || null, location: form.location || null, event_date }
     await supabase.from('events').update(updates).eq('id', id)
     setEvent(ev => ({ ...ev, ...updates }))
@@ -141,15 +141,9 @@ export default function EventDetail() {
                 <label className="text-xs font-medium text-gray-700 mb-1 block">Başlık</label>
                 <input type="text" value={form.title || ''} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">Tarih</label>
-                  <input type="date" value={form.date || ''} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">Saat</label>
-                  <input type="time" value={form.time || ''} onChange={e => setForm(f => ({ ...f, time: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-                </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Tarih ve Saat</label>
+                <input type="datetime-local" value={form.datetime || ''} onChange={e => setForm(f => ({ ...f, datetime: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1 block">Konum</label>
