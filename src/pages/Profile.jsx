@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import AutocompleteInput, { CITIES, OCCUPATIONS } from '../components/AutocompleteInput'
@@ -18,7 +18,9 @@ const PREDEFINED_INTERESTS = [
 
 export default function Profile() {
   const { profile, signOut, refreshProfile } = useAuth()
-  const [editMode, setEditMode] = useState(false)
+  const location = useLocation()
+  const isWelcome = location.state?.welcome === true
+  const [editMode, setEditMode] = useState(isWelcome)
   const [form, setForm] = useState({
     full_name: '',
     username: '',
@@ -121,6 +123,13 @@ export default function Profile() {
   return (
     <div className="pb-8">
       <h1 className="text-xl font-bold text-gray-900 mb-4">Profil</h1>
+
+      {isWelcome && (
+        <div className="bg-primary-50 border border-primary-200 rounded-2xl p-4 mb-4">
+          <p className="text-sm font-semibold text-primary-800">🎉 Üyeliğiniz onaylandı, hoş geldiniz!</p>
+          <p className="text-xs text-primary-600 mt-1">Diğer üyeler sizi daha iyi tanısın diye profilinizi doldurun — şehir, meslek, ilgi alanlarınızı ekleyin.</p>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <div className="flex items-center gap-4 mb-5">

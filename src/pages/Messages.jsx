@@ -236,7 +236,7 @@ export default function Messages() {
   }
 
   return (
-    <div className="pb-8 h-[calc(100vh-80px)] md:h-[calc(100vh-100px)] flex flex-col">
+    <div className="h-[calc(100dvh-160px)] md:h-[calc(100vh-100px)] flex flex-col">
       <div className="flex justify-between items-center mb-4 shrink-0">
         <h1 className="text-xl font-bold text-gray-900">Mesajlar</h1>
         <button

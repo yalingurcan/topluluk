@@ -38,17 +38,20 @@ export default function Admin() {
 
   async function approveUser(userId) {
     await supabase.from('profiles').update({ status: 'approved' }).eq('id', userId)
-    
-    // Find in pending or rejected
+
     let user = pending.find(u => u.id === userId)
     if (!user) user = rejected.find(u => u.id === userId)
-    
-    // Update local state arrays
+
     setPending(p => p.filter(u => u.id !== userId))
     setRejected(r => r.filter(u => u.id !== userId))
-    
+
     if (user) {
       setMembers(m => [...m, { ...user, status: 'approved' }].sort((a, b) => a.full_name?.localeCompare(b.full_name)))
+
+      // E-posta bildirimi gönder
+      supabase.functions.invoke('send-approval-email', {
+        body: { email: user.email, full_name: user.full_name }
+      }).catch(err => console.error('Email gönderilemedi:', err))
     }
   }
 

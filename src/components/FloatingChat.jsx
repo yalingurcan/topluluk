@@ -20,12 +20,11 @@ export default function FloatingChat() {
   const messagesEndRef = useRef(null)
   const profileCache = useRef({})
 
-  // Do not show floating chat on /mesajlar page
-  if (location.pathname === '/mesajlar') return null
+  const isMessagesPage = location.pathname === '/mesajlar'
 
   // Fetch DM history & Friend list
   useEffect(() => {
-    if (!profile?.id) return
+    if (!profile?.id || isMessagesPage) return
 
     fetchData()
 
@@ -223,6 +222,8 @@ export default function FloatingChat() {
     }
     setIsOpen(false)
   }
+
+  if (isMessagesPage) return null
 
   return (
     <div className={`fixed bottom-0 right-4 md:right-8 z-40 bg-white border border-gray-200/80 shadow-2xl rounded-t-2xl flex flex-col transition-all duration-300 ease-in-out ${

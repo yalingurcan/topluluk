@@ -13,8 +13,13 @@ export default function Pending() {
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-3">Başvurunuz İnceleniyor</h2>
         <p className="text-gray-500 leading-relaxed">
-          Üyelik başvurunuz alındı. Yönetici onayından sonra topluluğa erişebileceksiniz. Bu işlem kısa sürede tamamlanacaktır.
+          Üyelik başvurunuz alındı. Yönetici onayından sonra topluluğa erişebileceksiniz.
         </p>
+        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-2xl p-4 text-left space-y-1.5">
+          <p className="text-sm text-blue-700">📌 Sekmeyi kapatabilirsiniz.</p>
+          <p className="text-sm text-blue-700">📧 Üyeliğiniz onaylanınca e-posta ile bildirim gelecek.</p>
+          <p className="text-sm text-blue-700">🔑 Bildirim sonrası tekrar giriş yapabilirsiniz.</p>
+        </div>
         <button
           onClick={signOut}
           className="mt-8 text-sm text-gray-500 hover:text-gray-700 underline"

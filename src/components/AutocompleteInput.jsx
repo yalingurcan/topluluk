@@ -69,13 +69,10 @@ export default function AutocompleteInput({
   const handleFocus = () => {
     if (value && value.trim().length > 0) {
       const query = value.toLocaleLowerCase('tr-TR')
-      const filteredList = suggestions.filter(item => 
+      const filteredList = suggestions.filter(item =>
         item.toLocaleLowerCase('tr-TR').includes(query)
       ).slice(0, 5)
       setFiltered(filteredList)
-      setShowDropdown(true)
-    } else {
-      setFiltered(suggestions.slice(0, 5))
       setShowDropdown(true)
     }
   }
