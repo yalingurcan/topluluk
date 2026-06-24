@@ -71,7 +71,11 @@ export default function Admin() {
 
   async function deleteUser(userId) {
     if (!confirm('Bu kullanıcının profil kaydını veritabanından tamamen silmek istediğinize emin misiniz? (Bu işlem geri alınamaz)')) return
-    await supabase.from('profiles').delete().eq('id', userId)
+    const { error } = await supabase.rpc('delete_user', { target_user_id: userId })
+    if (error) {
+      alert('Kullanıcı silinemedi: ' + error.message)
+      return
+    }
     setPending(p => p.filter(u => u.id !== userId))
     setMembers(m => m.filter(u => u.id !== userId))
     setRejected(r => r.filter(u => u.id !== userId))

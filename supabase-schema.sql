@@ -420,3 +420,22 @@ create trigger on_profile_approved
   for each row
   execute function public.handle_status_approved();
 -- ─────────────────────────────────────────────
+
+-- ─────────────────────────────────────────────
+-- SECURE ADMIN USER DELETION FUNCTION (RPC)
+-- ─────────────────────────────────────────────
+create or replace function public.delete_user(target_user_id uuid)
+returns void as $$
+begin
+  -- Check if the calling user is an admin
+  if not exists (
+    select 1 from public.profiles where id = auth.uid() and is_admin = true
+  ) then
+    raise exception 'Unauthorized. Only admins can delete users.';
+  end if;
+
+  -- Delete from auth.users (cascades to profiles and all related tables)
+  delete from auth.users where id = target_user_id;
+end;
+$$ language plpgsql security definer;
+
