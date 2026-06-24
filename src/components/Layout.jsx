@@ -1,8 +1,12 @@
 import { Outlet } from 'react-router-dom'
 import BottomNav from './BottomNav'
 import TopNav from './TopNav'
+import FloatingChat from './FloatingChat'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Layout() {
+  const { profile } = useAuth()
+
   return (
     <div className="min-h-screen flex flex-col">
       <TopNav />
@@ -11,6 +15,7 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+      {profile && profile.status === 'approved' && <FloatingChat />}
       <BottomNav />
     </div>
   )

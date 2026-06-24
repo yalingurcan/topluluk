@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import LocationInput from '../components/LocationInput'
+import EventMap from '../components/EventMap'
 
 function formatDate(dt) {
   return new Date(dt).toLocaleString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -15,13 +17,14 @@ export default function Events() {
   const [showCreate, setShowCreate] = useState(false)
   const [createError, setCreateError] = useState('')
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', location: '', date: '', time: '' })
+  const [form, setForm] = useState({ title: '', description: '', location: '', date: '', time: '', is_private: false })
+  const [viewMode, setViewMode] = useState('list')
 
   useEffect(() => { fetchData() }, [])
 
   async function fetchData() {
     const [{ data: ev }, { data: myRsvps }] = await Promise.all([
-      supabase.from('events').select('*, profiles!events_created_by_fkey(full_name)').order('event_date', { ascending: true }),
+      supabase.from('events').select('*, profiles!created_by(full_name)').order('event_date', { ascending: true }),
       supabase.from('rsvps').select('event_id, status').eq('user_id', profile.id)
     ])
     setEvents(ev || [])
@@ -55,14 +58,15 @@ export default function Events() {
         description: form.description || null,
         location: form.location || null,
         event_date,
+        is_private: form.is_private,
         created_by: profile.id
       })
-      .select('*, profiles!events_created_by_fkey(full_name)')
+      .select('*, profiles!created_by(full_name)')
       .single()
     setCreating(false)
     if (error) { setCreateError(error.message); return }
     if (data) setEvents(ev => [data, ...ev].sort((a, b) => new Date(a.event_date) - new Date(b.event_date)))
-    setForm({ title: '', description: '', location: '', date: '', time: '' })
+    setForm({ title: '', description: '', location: '', date: '', time: '', is_private: false })
     setShowCreate(false)
   }
 
@@ -73,18 +77,43 @@ export default function Events() {
   }
 
   const rsvpOptions = [
-    { status: 'going', label: 'Katılıyorum', color: 'green' },
-    { status: 'maybe', label: 'Belki', color: 'yellow' },
-    { status: 'notgoing', label: 'Katılmıyorum', color: 'red' },
+    { status: 'going', label: '👍 Katılıyorum', color: 'green' },
+    { status: 'notgoing', label: '👎 Katılmıyorum', color: 'red' },
   ]
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Etkinlikler</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between sm:justify-start gap-4">
+          <h1 className="text-xl font-bold text-gray-900">Etkinlikler</h1>
+          <div className="flex bg-gray-100/80 rounded-xl p-0.5 border border-gray-200/50">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                viewMode === 'list' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              Liste
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('map')}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                viewMode === 'map' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              Harita
+            </button>
+          </div>
+        </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary-700"
+          className="flex items-center justify-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -92,6 +121,12 @@ export default function Events() {
           Etkinlik Ekle
         </button>
       </div>
+
+      {viewMode === 'map' && !loading && events.length > 0 && (
+        <div className="mb-4">
+          <EventMap events={events} />
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -112,8 +147,24 @@ export default function Events() {
                     <Link to={`/etkinlikler/${ev.id}`}>
                       <h3 className="font-semibold text-gray-900 hover:text-primary-600">{ev.title}</h3>
                     </Link>
-                    <p className="text-xs text-primary-600 mt-1 font-medium">{formatDate(ev.event_date)}</p>
-                    {ev.location && <p className="text-xs text-gray-500 mt-0.5">📍 {ev.location}</p>}
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <p className="text-xs text-primary-600 font-medium">{formatDate(ev.event_date)}</p>
+                      {ev.is_private && (
+                        <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                          🔒 Özel
+                        </span>
+                      )}
+                    </div>
+                    {ev.location && (
+                      <a 
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-gray-500 hover:text-primary-600 hover:underline mt-0.5 inline-flex items-center gap-1"
+                      >
+                        📍 {ev.location}
+                      </a>
+                    )}
                     {ev.description && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{ev.description}</p>}
                     <p className="text-xs text-gray-400 mt-2">Düzenleyen: {ev.profiles?.full_name}</p>
                   </div>
@@ -134,7 +185,6 @@ export default function Events() {
                       className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors border ${
                         rsvps[ev.id] === status
                           ? color === 'green' ? 'bg-green-50 text-green-700 border-green-200'
-                          : color === 'yellow' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
                           : 'bg-red-50 text-red-700 border-red-200'
                           : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                       }`}
@@ -199,13 +249,27 @@ export default function Events() {
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1 block">Konum</label>
-                <input
-                  type="text"
+                <LocationInput
                   value={form.location}
-                  onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onChange={val => setForm(f => ({ ...f, location: val }))}
                   placeholder="Adres veya yer adı"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
+                <span className="text-[10px] text-gray-400 mt-1 block">
+                  İpucu: Yazdığınız konum Google Haritalar linkine dönüştürülecektir.
+                </span>
+              </div>
+              <div className="flex items-center gap-2 py-1">
+                <input
+                  type="checkbox"
+                  id="is_private"
+                  checked={form.is_private}
+                  onChange={e => setForm(f => ({ ...f, is_private: e.target.checked }))}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 h-4 w-4"
+                />
+                <label htmlFor="is_private" className="text-xs font-medium text-gray-700 select-none">
+                  🔒 Sadece arkadaşlarıma özel (Gizli Etkinlik)
+                </label>
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1 block">Açıklama</label>

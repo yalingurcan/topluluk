@@ -16,6 +16,8 @@ export default function PostCard({ post, onDelete, onEdit }) {
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
   const [loadingComments, setLoadingComments] = useState(false)
+  const [activeReplyId, setActiveReplyId] = useState(null)
+  const [replyText, setReplyText] = useState('')
   const [editMode, setEditMode] = useState(false)
   const [editTitle, setEditTitle] = useState(post.title)
   const [editBody, setEditBody] = useState(post.body)
@@ -36,16 +38,22 @@ export default function PostCard({ post, onDelete, onEdit }) {
     setLoadingComments(false)
   }
 
-  async function submitComment(e) {
+  async function submitComment(e, parentId = null) {
     e.preventDefault()
-    if (!commentText.trim()) return
+    const text = parentId ? replyText.trim() : commentText.trim()
+    if (!text) return
     const { data } = await supabase
       .from('comments')
-      .insert({ post_id: post.id, author_id: profile.id, body: commentText.trim() })
+      .insert({ post_id: post.id, author_id: profile.id, body: text, parent_id: parentId })
       .select('*, profiles(full_name)')
       .single()
+    if (parentId) {
+      setActiveReplyId(null)
+      setReplyText('')
+    } else {
+      setCommentText('')
+    }
     if (data) setComments(c => [...c, data])
-    setCommentText('')
   }
 
   async function deleteComment(commentId) {
@@ -58,6 +66,9 @@ export default function PostCard({ post, onDelete, onEdit }) {
     setEditMode(false)
   }
 
+  const rootComments = comments.filter(c => !c.parent_id)
+  const getRepliesFor = (parentId) => comments.filter(c => c.parent_id === parentId)
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="p-4">
@@ -65,8 +76,8 @@ export default function PostCard({ post, onDelete, onEdit }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               {post.channels && (
-                <span className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">
-                  #{post.channels.name}
+                <span className="text-[10px] bg-primary-50 text-primary-700 border border-primary-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                  {post.channels.name.toLocaleUpperCase('tr-TR')}
                 </span>
               )}
               <span className="text-xs text-gray-400">{timeAgo(post.created_at)}</span>
@@ -129,27 +140,107 @@ export default function PostCard({ post, onDelete, onEdit }) {
 
       {showComments && (
         <div className="border-t border-gray-50 bg-gray-50 px-4 py-3 space-y-3">
-          {comments.length === 0 && <p className="text-xs text-gray-400">Henüz yorum yok.</p>}
-          {comments.map(c => (
-            <div key={c.id} className="flex gap-2 items-start">
-              <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                <span className="text-xs font-bold text-primary-700">{c.profiles?.full_name?.[0]}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-gray-700">{c.profiles?.full_name}</p>
-                <p className="text-xs text-gray-600">{c.body}</p>
-              </div>
-              {(profile?.is_admin || profile?.id === c.author_id) && (
-                <button onClick={() => deleteComment(c.id)} className="text-gray-300 hover:text-red-400 shrink-0">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          ))}
-          <form onSubmit={submitComment} className="flex gap-2 mt-2">
+          {rootComments.length === 0 && <p className="text-xs text-gray-400">Henüz yorum yok.</p>}
+          
+          <div className="space-y-4">
+            {rootComments.map(c => {
+              const replies = getRepliesFor(c.id)
+              return (
+                <div key={c.id} className="space-y-3">
+                  {/* Ana Yorum */}
+                  <div className="flex gap-2 items-start">
+                    <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-primary-700">{c.profiles?.full_name?.[0]?.toUpperCase()}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-medium text-gray-700">{c.profiles?.full_name}</span>
+                        <span className="text-[10px] text-gray-400">
+                          {new Date(c.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-0.5">{c.body}</p>
+                      
+                      {/* Yanıtla Butonu */}
+                      <button 
+                        onClick={() => {
+                          if (activeReplyId === c.id) {
+                            setActiveReplyId(null)
+                            setReplyText('')
+                          } else {
+                            setActiveReplyId(c.id)
+                            setReplyText('')
+                          }
+                        }}
+                        className="text-[10px] text-primary-600 hover:underline font-medium mt-1 block"
+                      >
+                        Yanıtla
+                      </button>
+                    </div>
+                    {(profile?.is_admin || profile?.id === c.author_id) && (
+                      <button onClick={() => deleteComment(c.id)} className="text-gray-300 hover:text-red-400 shrink-0">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Yanıtları Listeleme */}
+                  {replies.length > 0 && (
+                    <div className="pl-6 border-l-2 border-gray-200/60 ml-3.5 space-y-3 mt-2">
+                      {replies.map(reply => (
+                        <div key={reply.id} className="flex gap-2 items-start">
+                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+                            <span className="text-[10px] font-bold text-gray-600">{reply.profiles?.full_name?.[0]?.toUpperCase()}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-medium text-gray-700">{reply.profiles?.full_name}</span>
+                              <span className="text-[10px] text-gray-400">
+                                {new Date(reply.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-0.5">{reply.body}</p>
+                          </div>
+                          {(profile?.is_admin || profile?.id === reply.author_id) && (
+                            <button onClick={() => deleteComment(reply.id)} className="text-gray-300 hover:text-red-400 shrink-0">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Aktif Cevap Formu */}
+                  {activeReplyId === c.id && (
+                    <form onSubmit={(e) => submitComment(e, c.id)} className="flex gap-2 pl-6 ml-3.5 mt-2">
+                      <input
+                        required
+                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        placeholder="Cevap yaz..."
+                        value={replyText}
+                        onChange={e => setReplyText(e.target.value)}
+                      />
+                      <button 
+                        type="submit" 
+                        className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg font-medium"
+                      >
+                        Gönder
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          <form onSubmit={(e) => submitComment(e)} className="flex gap-2 mt-2">
             <input
+              required
               className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
               placeholder="Yorum yaz..."
               value={commentText}

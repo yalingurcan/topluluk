@@ -45,14 +45,14 @@ export default function CreatePostModal({ onClose, onCreated, defaultChannelId =
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-gray-700 mb-1 block">Grup</label>
+            <label className="text-xs font-medium text-gray-700 mb-1 block">Konu</label>
             <select
               value={form.channel_id}
               onChange={set('channel_id')}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="">Grup seçin (isteğe bağlı)</option>
-              {channels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <option value="">Konu seçin (isteğe bağlı)</option>
+              {channels.map(c => <option key={c.id} value={c.id}>{c.name.toLocaleUpperCase('tr-TR')}</option>)}
             </select>
           </div>
           <div>

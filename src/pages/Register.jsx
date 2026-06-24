@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import AutocompleteInput, { CITIES, OCCUPATIONS } from '../components/AutocompleteInput'
 
 export default function Register() {
   const { signUp } = useAuth()
-  const [form, setForm] = useState({ email: '', password: '', fullName: '', username: '' })
+  const [form, setForm] = useState({ email: '', password: '', fullName: '', username: '', city: '', occupation: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -15,8 +16,10 @@ export default function Register() {
     e.preventDefault()
     setError('')
     if (form.password.length < 6) { setError('Şifre en az 6 karakter olmalıdır.'); return }
+    if (!form.city.trim()) { setError('Lütfen yaşadığınız şehri belirtin.'); return }
+    if (!form.occupation.trim()) { setError('Lütfen mesleğinizi belirtin.'); return }
     setLoading(true)
-    const { error } = await signUp(form.email, form.password, form.fullName, form.username)
+    const { error } = await signUp(form.email, form.password, form.fullName, form.username, form.city.trim(), form.occupation.trim())
     if (error) setError(error.message)
     else setDone(true)
     setLoading(false)
@@ -50,19 +53,34 @@ export default function Register() {
           {[
             { key: 'fullName', label: 'Ad Soyad', type: 'text', placeholder: 'Adınız Soyadınız' },
             { key: 'username', label: 'Kullanıcı Adı', type: 'text', placeholder: 'kullanici_adi' },
+            { key: 'city', label: 'Yaşadığınız Şehir', type: 'text', placeholder: 'Örn: Berlin', isAutocomplete: true, suggestions: CITIES },
+            { key: 'occupation', label: 'Mesleğiniz', type: 'text', placeholder: 'Örn: Yazılım Mühendisi', isAutocomplete: true, suggestions: OCCUPATIONS },
             { key: 'email', label: 'E-posta', type: 'email', placeholder: 'ornek@email.com' },
             { key: 'password', label: 'Şifre', type: 'password', placeholder: '••••••••' },
-          ].map(({ key, label, type, placeholder }) => (
+          ].map(({ key, label, type, placeholder, isAutocomplete, suggestions }) => (
             <div key={key}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-              <input
-                type={type}
-                value={form[key]}
-                onChange={set(key)}
-                required
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder={placeholder}
-              />
+              {isAutocomplete ? (
+                <AutocompleteInput
+                  value={form[key]}
+                  onChange={val => setForm(f => ({ ...f, [key]: val }))}
+                  suggestions={suggestions}
+                  placeholder={placeholder}
+                  label={label}
+                  required
+                />
+              ) : (
+                <>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                  <input
+                    type={type}
+                    value={form[key]}
+                    onChange={set(key)}
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder={placeholder}
+                  />
+                </>
+              )}
             </div>
           ))}
           <button

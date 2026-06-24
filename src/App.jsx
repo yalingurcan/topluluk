@@ -11,6 +11,9 @@ import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
+import Members from './pages/Members'
+import Friends from './pages/Friends'
+import Messages from './pages/Messages'
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { session, profile, loading } = useAuth()
@@ -52,11 +55,14 @@ function AppRoutes() {
       <Route path="/beklemede" element={<Pending />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<Feed />} />
-        <Route path="/gruplar" element={<Channels />} />
-        <Route path="/gruplar/:id" element={<ChannelDetail />} />
+        <Route path="/konular" element={<Channels />} />
+        <Route path="/konular/:id" element={<ChannelDetail />} />
         <Route path="/etkinlikler" element={<Events />} />
         <Route path="/etkinlikler/:id" element={<EventDetail />} />
         <Route path="/profil" element={<Profile />} />
+        <Route path="/uyeler" element={<Members />} />
+        <Route path="/arkadaslar" element={<Friends />} />
+        <Route path="/mesajlar" element={<Messages />} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

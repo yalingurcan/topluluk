@@ -52,9 +52,9 @@ create policy "Approved members can view channels" on channels
     exists (select 1 from profiles where id = auth.uid() and status = 'approved')
   );
 
-create policy "Approved members can create channels" on channels
+create policy "Admins can create channels" on channels
   for insert with check (
-    exists (select 1 from profiles where id = auth.uid() and status = 'approved')
+    exists (select 1 from profiles where id = auth.uid() and is_admin = true)
   );
 
 create policy "Admins or creators can update channels" on channels
@@ -139,6 +139,7 @@ create table comments (
   post_id uuid references posts(id) on delete cascade,
   author_id uuid references profiles(id) on delete set null,
   body text not null,
+  parent_id uuid references comments(id) on delete cascade,
   created_at timestamptz default now()
 );
 
@@ -229,6 +230,36 @@ create policy "Users can delete own rsvp" on rsvps
   for delete using (user_id = auth.uid());
 
 -- ─────────────────────────────────────────────
+-- EVENT COMMENTS
+-- ─────────────────────────────────────────────
+create table event_comments (
+  id uuid default uuid_generate_v4() primary key,
+  event_id uuid references events(id) on delete cascade not null,
+  author_id uuid references profiles(id) on delete set null,
+  body text not null,
+  parent_id uuid references event_comments(id) on delete cascade,
+  created_at timestamptz default now()
+);
+
+alter table event_comments enable row level security;
+
+create policy "Approved members can view event comments" on event_comments
+  for select using (
+    exists (select 1 from profiles where id = auth.uid() and status = 'approved')
+  );
+
+create policy "Approved members can create event comments" on event_comments
+  for insert with check (
+    exists (select 1 from profiles where id = auth.uid() and status = 'approved')
+  );
+
+create policy "Authors or admins can delete event comments" on event_comments
+  for delete using (
+    author_id = auth.uid() or
+    exists (select 1 from profiles where id = auth.uid() and is_admin = true)
+  );
+
+-- ─────────────────────────────────────────────
 -- MAKE PROFILES READABLE FOR JOINS
 -- (allows querying profiles.full_name in joins)
 -- ─────────────────────────────────────────────
@@ -237,6 +268,98 @@ create policy "Users can delete own rsvp" on rsvps
 create policy "Admins can view all profiles" on profiles
   for select using (
     exists (select 1 from profiles p where p.id = auth.uid() and p.is_admin = true)
+  );
+
+-- ─────────────────────────────────────────────
+-- PROFILE EXTRA FIELDS (city, occupation, hobbies, interests, age, gender)
+-- ─────────────────────────────────────────────
+alter table profiles
+  add column if not exists city text,
+  add column if not exists occupation text,
+  add column if not exists hobbies text,
+  add column if not exists interests text,
+  add column if not exists age integer,
+  add column if not exists gender text;
+
+-- ─────────────────────────────────────────────
+-- EVENTS EXTRA FIELD (is_private)
+-- ─────────────────────────────────────────────
+alter table events
+  add column if not exists is_private boolean default false;
+
+-- ─────────────────────────────────────────────
+-- FRIENDSHIPS
+-- ─────────────────────────────────────────────
+create table if not exists friendships (
+  id uuid default uuid_generate_v4() primary key,
+  sender_id uuid references profiles(id) on delete cascade not null,
+  receiver_id uuid references profiles(id) on delete cascade not null,
+  status text not null default 'pending' check (status in ('pending', 'accepted')),
+  created_at timestamptz default now(),
+  unique (sender_id, receiver_id)
+);
+
+alter table friendships enable row level security;
+
+create policy "Users can view their own friendships" on friendships
+  for select using (auth.uid() = sender_id or auth.uid() = receiver_id);
+
+create policy "Users can send friend requests" on friendships
+  for insert with check (
+    auth.uid() = sender_id and
+    exists (select 1 from profiles where id = auth.uid() and status = 'approved')
+  );
+
+create policy "Receivers can accept friend requests" on friendships
+  for update using (auth.uid() = receiver_id);
+
+create policy "Either party can delete friendship" on friendships
+  for delete using (auth.uid() = sender_id or auth.uid() = receiver_id);
+
+-- ─────────────────────────────────────────────
+-- DIRECT MESSAGES
+-- ─────────────────────────────────────────────
+create table if not exists direct_messages (
+  id uuid default uuid_generate_v4() primary key,
+  sender_id uuid references profiles(id) on delete cascade not null,
+  receiver_id uuid references profiles(id) on delete cascade not null,
+  body text not null,
+  created_at timestamptz default now()
+);
+
+alter table direct_messages enable row level security;
+
+create policy "Users can view their own DMs" on direct_messages
+  for select using (auth.uid() = sender_id or auth.uid() = receiver_id);
+
+create policy "Approved users can send DMs" on direct_messages
+  for insert with check (
+    auth.uid() = sender_id and
+    exists (select 1 from profiles where id = auth.uid() and status = 'approved')
+  );
+
+-- ─────────────────────────────────────────────
+-- EVENT MESSAGES (live event chat rooms)
+-- ─────────────────────────────────────────────
+create table if not exists event_messages (
+  id uuid default uuid_generate_v4() primary key,
+  event_id uuid references events(id) on delete cascade not null,
+  sender_id uuid references profiles(id) on delete set null,
+  body text not null,
+  created_at timestamptz default now()
+);
+
+alter table event_messages enable row level security;
+
+create policy "Approved members can view event messages" on event_messages
+  for select using (
+    exists (select 1 from profiles where id = auth.uid() and status = 'approved')
+  );
+
+create policy "Approved members can send event messages" on event_messages
+  for insert with check (
+    auth.uid() = sender_id and
+    exists (select 1 from profiles where id = auth.uid() and status = 'approved')
   );
 
 -- ─────────────────────────────────────────────
