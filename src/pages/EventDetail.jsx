@@ -93,7 +93,7 @@ export default function EventDetail() {
                 { key: 'title', label: 'Başlık', type: 'text' },
                 { key: 'event_date', label: 'Tarih ve Saat', type: 'datetime-local' },
                 { key: 'location', label: 'Konum', type: 'text' },
-                { key: 'cover_image_url', label: 'Kapak Görseli URL', type: 'url' },
+                { key: 'cover_image_url', label: 'Kapak Görseli URL', type: 'text' },
               ].map(({ key, label, type }) => (
                 <div key={key}>
                   <label className="text-xs font-medium text-gray-700 mb-1 block">{label}</label>
