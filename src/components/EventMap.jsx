@@ -105,10 +105,16 @@ export default function EventMap({ events }) {
 
     // Add markers
     eventLocations.forEach(ev => {
+      const d = new Date(ev.event_date)
+      const months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara']
+      const day = d.getDate()
+      const month = months[d.getMonth()]
+
       const markerHtml = `
-        <div class="flex items-center justify-center">
-          <div class="relative flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 hover:bg-primary-700 text-white transition-all transform hover:scale-105 shadow-md border-2 border-white text-xs cursor-pointer">
-            📅
+        <div style="display:flex;align-items:center;justify-content:center;">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#6366f1;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.25);border:2px solid white;cursor:pointer;line-height:1;">
+            <span style="font-size:14px;font-weight:700;">${day}</span>
+            <span style="font-size:8px;font-weight:600;opacity:0.85;margin-top:1px;">${month}</span>
           </div>
         </div>
       `
@@ -116,8 +122,8 @@ export default function EventMap({ events }) {
       const customIcon = L.divIcon({
         html: markerHtml,
         className: 'custom-event-marker',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
       })
 
       const dateStr = new Date(ev.event_date).toLocaleString('tr-TR', { 
@@ -130,13 +136,13 @@ export default function EventMap({ events }) {
       const marker = L.marker(ev.coords, { icon: customIcon })
         .addTo(mapInstanceRef.current)
         .bindPopup(`
-          <div class="p-2 min-w-[160px] text-left">
-            <h3 class="font-bold text-sm text-gray-900 leading-tight">${ev.title}</h3>
-            <p class="text-[11px] text-primary-600 font-semibold mt-1">📅 ${dateStr}</p>
-            <p class="text-[11px] text-gray-500 truncate mt-0.5">📍 ${ev.location}</p>
-            <a 
-              href="/etkinlikler/${ev.id}" 
-              class="mt-2.5 block text-center bg-primary-600 hover:bg-primary-700 text-white text-[10px] font-semibold py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer"
+          <div style="padding:8px;min-width:160px;text-align:left;">
+            <h3 style="font-weight:700;font-size:13px;color:#111827;line-height:1.3;margin:0 0 6px 0;">${ev.title}</h3>
+            <p style="font-size:11px;color:#6366f1;font-weight:600;margin:0 0 3px 0;">📅 ${dateStr}</p>
+            <p style="font-size:11px;color:#6b7280;margin:0 0 8px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${ev.location}</p>
+            <a
+              href="/etkinlikler/${ev.id}"
+              style="display:block;text-align:center;background:#6366f1;color:#ffffff !important;font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;text-decoration:none;"
             >
               Etkinlik Detayı
             </a>

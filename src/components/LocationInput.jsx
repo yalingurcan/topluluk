@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
-export default function LocationInput({ value, onChange, placeholder, className }) {
+export default function LocationInput({ value, onChange, onCityChange, placeholder, className }) {
   const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -57,6 +57,11 @@ export default function LocationInput({ value, onChange, placeholder, className 
 
   const handleSelect = (item) => {
     onChange(item.display_name)
+    if (onCityChange) {
+      const addr = item.address || {}
+      const city = addr.city || addr.town || addr.village || addr.municipality || ''
+      onCityChange(city)
+    }
     setShowDropdown(false)
   }
 

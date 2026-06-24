@@ -17,7 +17,7 @@ export default function Events() {
   const [showCreate, setShowCreate] = useState(false)
   const [createError, setCreateError] = useState('')
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', location: '', date: '', time: '', is_private: false })
+  const [form, setForm] = useState({ title: '', description: '', location: '', city: '', date: '', time: '', is_private: false })
   const [viewMode, setViewMode] = useState('list')
 
   useEffect(() => { fetchData() }, [])
@@ -57,6 +57,7 @@ export default function Events() {
         title: form.title,
         description: form.description || null,
         location: form.location || null,
+        city: form.city || null,
         event_date,
         is_private: form.is_private,
         created_by: profile.id
@@ -66,7 +67,7 @@ export default function Events() {
     setCreating(false)
     if (error) { setCreateError(error.message); return }
     if (data) setEvents(ev => [data, ...ev].sort((a, b) => new Date(a.event_date) - new Date(b.event_date)))
-    setForm({ title: '', description: '', location: '', date: '', time: '', is_private: false })
+    setForm({ title: '', description: '', location: '', city: '', date: '', time: '', is_private: false })
     setShowCreate(false)
   }
 
@@ -149,6 +150,11 @@ export default function Events() {
                     </Link>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <p className="text-xs text-primary-600 font-medium">{formatDate(ev.event_date)}</p>
+                      {ev.city && (
+                        <span className="text-[10px] bg-primary-50 text-primary-700 border border-primary-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                          📍 {ev.city}
+                        </span>
+                      )}
                       {ev.is_private && (
                         <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                           🔒 Özel
@@ -252,6 +258,7 @@ export default function Events() {
                 <LocationInput
                   value={form.location}
                   onChange={val => setForm(f => ({ ...f, location: val }))}
+                  onCityChange={city => setForm(f => ({ ...f, city }))}
                   placeholder="Adres veya yer adı"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
