@@ -18,7 +18,7 @@ export default function ChannelDetail() {
 
   async function fetchData() {
     const [{ data: ch }, { data: p }, { data: mem }] = await Promise.all([
-      supabase.from('channels').select('*, profiles(full_name)').eq('id', id).single(),
+      supabase.from('channels').select('*, profiles!channels_created_by_fkey(full_name)').eq('id', id).single(),
       supabase.from('posts').select('*, profiles(full_name), channels(name)').eq('channel_id', id).order('created_at', { ascending: false }),
       supabase.from('channel_members').select('channel_id').eq('channel_id', id).eq('user_id', profile.id).maybeSingle()
     ])

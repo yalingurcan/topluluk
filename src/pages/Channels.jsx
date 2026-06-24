@@ -15,7 +15,7 @@ export default function Channels() {
 
   async function fetchData() {
     const [{ data: ch }, { data: mem }] = await Promise.all([
-      supabase.from('channels').select('*, profiles(full_name)').order('created_at', { ascending: false }),
+      supabase.from('channels').select('*, profiles!channels_created_by_fkey(full_name)').order('created_at', { ascending: false }),
       supabase.from('channel_members').select('channel_id').eq('user_id', profile.id)
     ])
     setChannels(ch || [])
@@ -39,7 +39,7 @@ export default function Channels() {
     const { data } = await supabase
       .from('channels')
       .insert({ name: form.name.trim(), description: form.description.trim(), created_by: profile.id })
-      .select('*, profiles(full_name)')
+      .select('*, profiles!channels_created_by_fkey(full_name)')
       .single()
     if (data) {
       setChannels(c => [data, ...c])
