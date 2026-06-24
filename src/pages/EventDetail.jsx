@@ -26,7 +26,7 @@ export default function EventDetail() {
       supabase.from('rsvps').select('*, profiles(full_name)').eq('event_id', id)
     ])
     setEvent(ev)
-    setForm({ title: ev?.title, description: ev?.description, location: ev?.location, event_date: ev?.event_date?.slice(0, 16), cover_image_url: ev?.cover_image_url || '' })
+    setForm({ title: ev?.title, description: ev?.description, location: ev?.location, date: ev?.event_date?.slice(0, 10) || '', time: ev?.event_date?.slice(11, 16) || '' })
     setRsvps(allRsvps || [])
     setMyRsvp((allRsvps || []).find(r => r.user_id === profile.id)?.status || null)
     setLoading(false)
@@ -48,8 +48,10 @@ export default function EventDetail() {
   }
 
   async function handleSave() {
-    await supabase.from('events').update(form).eq('id', id)
-    setEvent(ev => ({ ...ev, ...form }))
+    const event_date = `${form.date}T${form.time}:00`
+    const updates = { title: form.title, description: form.description || null, location: form.location || null, event_date }
+    await supabase.from('events').update(updates).eq('id', id)
+    setEvent(ev => ({ ...ev, ...updates }))
     setEditMode(false)
   }
 
@@ -89,30 +91,27 @@ export default function EventDetail() {
         <div className="p-5">
           {editMode ? (
             <div className="space-y-3">
-              {[
-                { key: 'title', label: 'Başlık', type: 'text' },
-                { key: 'event_date', label: 'Tarih ve Saat', type: 'datetime-local' },
-                { key: 'location', label: 'Konum', type: 'text' },
-                { key: 'cover_image_url', label: 'Kapak Görseli URL', type: 'text' },
-              ].map(({ key, label, type }) => (
-                <div key={key}>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">{label}</label>
-                  <input
-                    type={type}
-                    value={form[key] || ''}
-                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Başlık</label>
+                <input type="text" value={form.title || ''} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Tarih</label>
+                  <input type="date" value={form.date || ''} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
                 </div>
-              ))}
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Saat</label>
+                  <input type="time" value={form.time || ''} onChange={e => setForm(f => ({ ...f, time: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Konum</label>
+                <input type="text" value={form.location || ''} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+              </div>
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1 block">Açıklama</label>
-                <textarea
-                  value={form.description || ''}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  rows={3}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-                />
+                <textarea value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none" />
               </div>
               <div className="flex gap-2">
                 <button onClick={handleSave} className="flex-1 bg-primary-600 text-white py-2.5 rounded-xl text-sm font-medium">Kaydet</button>

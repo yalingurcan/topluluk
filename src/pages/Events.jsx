@@ -15,7 +15,7 @@ export default function Events() {
   const [showCreate, setShowCreate] = useState(false)
   const [createError, setCreateError] = useState('')
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', location: '', event_date: '', cover_image_url: '' })
+  const [form, setForm] = useState({ title: '', description: '', location: '', date: '', time: '' })
 
   useEffect(() => { fetchData() }, [])
 
@@ -45,24 +45,24 @@ export default function Events() {
   async function handleCreate(e) {
     e.preventDefault()
     setCreateError('')
+    if (!form.date || !form.time) { setCreateError('Tarih ve saat zorunludur.'); return }
     setCreating(true)
-    const insertData = {
-      title: form.title,
-      description: form.description || null,
-      location: form.location || null,
-      event_date: form.event_date,
-      cover_image_url: form.cover_image_url || null,
-      created_by: profile.id
-    }
+    const event_date = `${form.date}T${form.time}:00`
     const { data, error } = await supabase
       .from('events')
-      .insert(insertData)
+      .insert({
+        title: form.title,
+        description: form.description || null,
+        location: form.location || null,
+        event_date,
+        created_by: profile.id
+      })
       .select('*, profiles(full_name)')
       .single()
     setCreating(false)
     if (error) { setCreateError(error.message); return }
-    if (data) setEvents(ev => [data, ...ev])
-    setForm({ title: '', description: '', location: '', event_date: '', cover_image_url: '' })
+    if (data) setEvents(ev => [data, ...ev].sort((a, b) => new Date(a.event_date) - new Date(b.event_date)))
+    setForm({ title: '', description: '', location: '', date: '', time: '' })
     setShowCreate(false)
   }
 
@@ -164,23 +164,49 @@ export default function Events() {
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-3">
-              {[
-                { key: 'title', label: 'Başlık', type: 'text', required: true },
-                { key: 'event_date', label: 'Tarih ve Saat', type: 'datetime-local', required: true },
-                { key: 'location', label: 'Konum', type: 'text' },
-                { key: 'cover_image_url', label: 'Kapak Görseli URL', type: 'text' },
-              ].map(({ key, label, type, required }) => (
-                <div key={key}>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">{label}</label>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Başlık *</label>
+                <input
+                  required
+                  type="text"
+                  value={form.title}
+                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Etkinlik adı"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Tarih *</label>
                   <input
-                    type={type}
-                    required={required}
-                    value={form[key]}
-                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                    required
+                    type="date"
+                    value={form.date}
+                    onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
-              ))}
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Saat *</label>
+                  <input
+                    required
+                    type="time"
+                    value={form.time}
+                    onChange={e => setForm(f => ({ ...f, time: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Konum</label>
+                <input
+                  type="text"
+                  value={form.location}
+                  onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Adres veya yer adı"
+                />
+              </div>
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1 block">Açıklama</label>
                 <textarea
@@ -188,10 +214,13 @@ export default function Events() {
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={3}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                  placeholder="Etkinlik hakkında bilgi..."
                 />
               </div>
               {createError && <div className="bg-red-50 text-red-700 text-xs px-3 py-2 rounded-lg">{createError}</div>}
-              <button type="submit" disabled={creating} className="w-full bg-primary-600 text-white py-2.5 rounded-xl font-medium text-sm disabled:opacity-60">{creating ? 'Oluşturuluyor...' : 'Etkinlik Oluştur'}</button>
+              <button type="submit" disabled={creating} className="w-full bg-primary-600 text-white py-2.5 rounded-xl font-medium text-sm disabled:opacity-60">
+                {creating ? 'Oluşturuluyor...' : 'Etkinlik Oluştur'}
+              </button>
             </form>
           </div>
         </div>
