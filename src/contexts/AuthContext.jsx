@@ -43,18 +43,12 @@ export function AuthProvider({ children }) {
   }
 
   async function signUp(email, password, fullName, username) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) return { error }
-    if (data.user) {
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        full_name: fullName,
-        username,
-        status: 'pending',
-        is_admin: false
-      })
-    }
-    return { error: null }
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName, username } }
+    })
+    return { error }
   }
 
   async function signOut() {
