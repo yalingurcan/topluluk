@@ -151,7 +151,7 @@ export default function Events() {
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <p className="text-xs text-primary-600 font-medium">{formatDate(ev.event_date)}</p>
                       {ev.city && (
-                        <span className="text-[10px] bg-primary-50 text-primary-700 border border-primary-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <span className="text-xs bg-amber-100 text-gray-800 border border-amber-200 px-2.5 py-0.5 rounded-full font-semibold">
                           📍 {ev.city}
                         </span>
                       )}

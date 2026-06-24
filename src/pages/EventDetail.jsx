@@ -187,7 +187,14 @@ export default function EventDetail() {
                   </div>
                 )}
               </div>
-              <p className="text-primary-600 font-medium text-sm mt-2">{formatDate(event.event_date)}</p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <p className="text-primary-600 font-medium text-sm">{formatDate(event.event_date)}</p>
+                {event.city && (
+                  <span className="text-xs bg-amber-100 text-gray-800 border border-amber-200 px-2.5 py-0.5 rounded-full font-semibold">
+                    📍 {event.city}
+                  </span>
+                )}
+              </div>
               {event.location && (
                 <a 
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}

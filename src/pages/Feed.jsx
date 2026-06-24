@@ -108,7 +108,14 @@ export default function Feed() {
                     <Link to={`/etkinlikler/${item.id}`}>
                       <h3 className="font-semibold text-gray-900 hover:text-primary-600 text-sm">{item.title}</h3>
                     </Link>
-                    <p className="text-xs text-primary-600 mt-1 font-medium">📅 {formatEventDate(item.event_date)}</p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <p className="text-xs text-primary-600 font-medium">📅 {formatEventDate(item.event_date)}</p>
+                      {item.city && (
+                        <span className="text-xs bg-amber-100 text-gray-800 border border-amber-200 px-2.5 py-0.5 rounded-full font-semibold">
+                          📍 {item.city}
+                        </span>
+                      )}
+                    </div>
                     {item.location && (
                       <a 
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
