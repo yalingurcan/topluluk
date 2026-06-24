@@ -198,7 +198,7 @@ export default function MemberMap({ members, onCitySelect, selectedCity }) {
 
   // 3. Initialize/update Leaflet Map
   useEffect(() => {
-    if (!leafletLoaded || !mapRef.current || cityData.length === 0) return
+    if (!leafletLoaded || !mapRef.current) return
 
     const L = window.L
 
@@ -301,9 +301,17 @@ export default function MemberMap({ members, onCitySelect, selectedCity }) {
           </div>
         </div>
       )}
-      <div 
-        ref={mapRef} 
-        className="h-[380px] w-full rounded-2xl border border-gray-100 shadow-sm z-10 overflow-hidden" 
+      {leafletLoaded && !loadingCoords && cityData.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center z-[100] pointer-events-none">
+          <div className="text-center bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-md border border-gray-100">
+            <p className="text-sm font-medium text-gray-500">📍 Henüz şehir bilgisi girilmiş üye yok.</p>
+            <p className="text-xs text-gray-400 mt-1">Üyeler profillerini güncelledikçe haritada görünecekler.</p>
+          </div>
+        </div>
+      )}
+      <div
+        ref={mapRef}
+        className="h-[380px] w-full rounded-2xl border border-gray-100 shadow-sm z-10 overflow-hidden"
         style={{ minHeight: '380px' }}
       />
     </div>

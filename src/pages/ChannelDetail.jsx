@@ -13,6 +13,7 @@ export default function ChannelDetail() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [cityFilter, setCityFilter] = useState('')
 
   // Channel editing state
   const [channelEditMode, setChannelEditMode] = useState(false)
@@ -74,6 +75,9 @@ export default function ChannelDetail() {
     await supabase.from('posts').update(updates).eq('id', postId)
     setPosts(p => p.map(x => x.id === postId ? { ...x, ...updates } : x))
   }
+
+  const uniqueCities = [...new Set(posts.map(p => p.city).filter(Boolean))]
+  const filteredPosts = cityFilter ? posts.filter(p => p.city === cityFilter) : posts
 
   if (loading) return (
     <div className="flex justify-center py-12">
@@ -215,13 +219,41 @@ export default function ChannelDetail() {
         </div>
       )}
 
+      {uniqueCities.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          <button
+            onClick={() => setCityFilter('')}
+            className={`text-xs px-3 py-1.5 rounded-full font-semibold border transition-all ${
+              !cityFilter
+                ? 'bg-primary-600 text-white border-primary-600'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-primary-300 hover:text-primary-600'
+            }`}
+          >
+            Tümü ({posts.length})
+          </button>
+          {uniqueCities.map(city => (
+            <button
+              key={city}
+              onClick={() => setCityFilter(city === cityFilter ? '' : city)}
+              className={`text-xs px-3 py-1.5 rounded-full font-semibold border transition-all ${
+                cityFilter === city
+                  ? 'bg-primary-600 text-white border-primary-600'
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-primary-300 hover:text-primary-600'
+              }`}
+            >
+              📍 {city} ({posts.filter(p => p.city === city).length})
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="space-y-4">
-        {posts.length === 0 ? (
+        {filteredPosts.length === 0 ? (
           <div className="text-center py-12 text-gray-400 text-sm bg-white rounded-2xl border border-gray-100 p-8">
-            Bu konuda henüz gönderi yok. İlk paylaşımı siz yapın!
+            {cityFilter ? `${cityFilter} için henüz gönderi yok.` : 'Bu konuda henüz gönderi yok. İlk paylaşımı siz yapın!'}
           </div>
         ) : (
-          posts.map(post => (
+          filteredPosts.map(post => (
             <PostCard key={post.id} post={post} onDelete={handleDelete} onEdit={handleEdit} />
           ))
         )}

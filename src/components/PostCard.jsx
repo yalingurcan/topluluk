@@ -16,6 +16,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
   const [loadingComments, setLoadingComments] = useState(false)
+  const [commentsLoaded, setCommentsLoaded] = useState(false)
   const [activeReplyId, setActiveReplyId] = useState(null)
   const [replyText, setReplyText] = useState('')
   const [editMode, setEditMode] = useState(false)
@@ -35,6 +36,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
       .order('created_at', { ascending: true })
     setComments(data || [])
     setShowComments(true)
+    setCommentsLoaded(true)
     setLoadingComments(false)
   }
 
@@ -74,10 +76,15 @@ export default function PostCard({ post, onDelete, onEdit }) {
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               {post.channels && (
                 <span className="text-[10px] bg-primary-50 text-primary-700 border border-primary-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                   {post.channels.name.toLocaleUpperCase('tr-TR')}
+                </span>
+              )}
+              {post.city && (
+                <span className="text-[10px] bg-gray-50 text-gray-600 border border-gray-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                  📍 {post.city}
                 </span>
               )}
               <span className="text-xs text-gray-400">{timeAgo(post.created_at)}</span>
@@ -134,7 +141,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
           onClick={loadComments}
           className="text-xs text-gray-500 hover:text-primary-600 font-medium"
         >
-          {loadingComments ? 'Yükleniyor...' : showComments ? 'Yorumları Gizle' : `Yorumlar`}
+          {loadingComments ? 'Yükleniyor...' : showComments ? `Yorumları Gizle (${comments.length})` : commentsLoaded ? `Yorumlar (${comments.length})` : 'Yorumlar'}
         </button>
       </div>
 

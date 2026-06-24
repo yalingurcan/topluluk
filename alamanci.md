@@ -1,5 +1,8 @@
 # Alamancı Topluluk — Proje Özeti
 
+## Çalışma Kuralları
+- **GitHub push:** Kullanıcı açıkça söylemedikçe `git push` yapılmaz, onay alınır.
+
 ## Genel Bilgi
 - **Proje adı:** Alamancı (alamanci.netlify.app)
 - **GitHub:** https://github.com/yalingurcan/topluluk

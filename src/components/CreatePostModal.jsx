@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { CITIES } from './AutocompleteInput'
 
 export default function CreatePostModal({ onClose, onCreated, defaultChannelId = null }) {
   const { profile } = useAuth()
   const [channels, setChannels] = useState([])
-  const [form, setForm] = useState({ title: '', body: '', channel_id: defaultChannelId || '' })
+  const [form, setForm] = useState({ title: '', body: '', channel_id: defaultChannelId || '', city: '' })
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     supabase.from('channels').select('id, name').order('name').then(({ data }) => setChannels(data || []))
@@ -18,16 +20,20 @@ export default function CreatePostModal({ onClose, onCreated, defaultChannelId =
     e.preventDefault()
     if (!form.title.trim() || !form.body.trim()) return
     setLoading(true)
-    const { data } = await supabase
+    setError(null)
+    const { data, error } = await supabase
       .from('posts')
       .insert({
         title: form.title.trim(),
         body: form.body.trim(),
         author_id: profile.id,
-        channel_id: form.channel_id || null
+        channel_id: form.channel_id || null,
+        city: form.city || null
       })
       .select('*, profiles(full_name), channels(name)')
       .single()
+    setLoading(false)
+    if (error) { setError(error.message); return }
     if (data) onCreated(data)
     onClose()
   }
@@ -66,6 +72,17 @@ export default function CreatePostModal({ onClose, onCreated, defaultChannelId =
             />
           </div>
           <div>
+            <label className="text-xs font-medium text-gray-700 mb-1 block">Şehir <span className="text-gray-400 font-normal">(isteğe bağlı)</span></label>
+            <select
+              value={form.city}
+              onChange={set('city')}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">Şehir seçin</option>
+              {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
             <label className="text-xs font-medium text-gray-700 mb-1 block">İçerik</label>
             <textarea
               required
@@ -76,6 +93,9 @@ export default function CreatePostModal({ onClose, onCreated, defaultChannelId =
               placeholder="Ne paylaşmak istiyorsunuz?"
             />
           </div>
+          {error && (
+            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{error}</p>
+          )}
           <button
             type="submit"
             disabled={loading}

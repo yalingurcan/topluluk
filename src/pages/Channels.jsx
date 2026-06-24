@@ -8,7 +8,7 @@ export default function Channels() {
   const [channels, setChannels] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
-  const [activeTab, setActiveTab] = useState('general') // 'general' or 'city'
+  const [activeTab, setActiveTab] = useState('general')
   const [form, setForm] = useState({ name: '', description: '', city: '', parent_id: '' })
 
   useEffect(() => {
@@ -56,13 +56,9 @@ export default function Channels() {
     setChannels(c => c.filter(x => x.id !== channelId))
   }
 
-  // Filter root channels
   const rootChannels = channels.filter(ch => !ch.parent_id)
-  
   const generalChannels = rootChannels.filter(ch => !ch.city)
   const cityChannels = rootChannels.filter(ch => ch.city)
-
-  // Eligible parent channels for dropdown (only root channels)
   const eligibleParents = rootChannels
 
   return (
@@ -163,7 +159,6 @@ export default function Channels() {
             ))
           )}
 
-          {/* Empty state */}
           {activeTab === 'general' && generalChannels.length === 0 && (
             <div className="text-center py-16 text-gray-400 bg-white rounded-2xl border border-gray-100">
               <p className="text-sm">Henüz genel konu bulunmuyor.</p>
