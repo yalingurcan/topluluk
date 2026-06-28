@@ -19,8 +19,18 @@ const PREDEFINED_INTERESTS = [
 export default function Profile() {
   const { profile, signOut, refreshProfile } = useAuth()
   const location = useLocation()
+  const [showWelcome, setShowWelcome] = useState(false)
   const isWelcome = location.state?.welcome === true
-  const [editMode, setEditMode] = useState(isWelcome)
+  const [editMode, setEditMode] = useState(isWelcome && (!profile || !profile.is_admin))
+
+  useEffect(() => {
+    if (isWelcome && profile && !profile.is_admin) {
+      const key = `profile_welcome_banner_closed_${profile.id}`
+      if (!localStorage.getItem(key)) {
+        setShowWelcome(true)
+      }
+    }
+  }, [isWelcome, profile])
   const [form, setForm] = useState({
     full_name: '',
     username: '',
@@ -130,8 +140,21 @@ export default function Profile() {
     <div className="pb-8">
       <h1 className="text-xl font-bold text-gray-900 mb-4">Profil</h1>
 
-      {isWelcome && (
-        <div className="bg-primary-50 border border-primary-200 rounded-2xl p-4 mb-4">
+      {showWelcome && (
+        <div className="bg-primary-50 border border-primary-200 rounded-2xl p-4 mb-4 relative">
+          <button
+            onClick={() => {
+              setShowWelcome(false)
+              if (profile) {
+                localStorage.setItem(`profile_welcome_banner_closed_${profile.id}`, 'true')
+              }
+            }}
+            className="absolute top-3 right-3 text-primary-400 hover:text-primary-600 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
           <p className="text-sm font-semibold text-primary-800">🎉 Üyeliğiniz onaylandı, hoş geldiniz!</p>
           <p className="text-xs text-primary-600 mt-1">Diğer üyeler sizi daha iyi tanısın diye profilinizi doldurun — şehir, meslek, ilgi alanlarınızı ekleyin.</p>
         </div>
