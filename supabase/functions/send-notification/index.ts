@@ -192,7 +192,7 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'Alamancı <onboarding@resend.dev>', // Custom verified sender can replace this once domain setup is done
+          from: 'Alamancı <info@alamanci.eu>',
           to: email,
           subject: subject,
           html: htmlContent
