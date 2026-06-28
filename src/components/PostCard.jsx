@@ -22,9 +22,21 @@ export default function PostCard({ post, onDelete, onEdit }) {
   const [editMode, setEditMode] = useState(false)
   const [editTitle, setEditTitle] = useState(post.title)
   const [editBody, setEditBody] = useState(post.body)
+  const [copied, setCopied] = useState(false)
 
   const canEdit = profile?.is_admin || profile?.id === post.author_id
   const canDelete = profile?.is_admin || profile?.id === post.author_id
+
+  async function handleShare() {
+    try {
+      const url = `${window.location.origin}/gonderiler/${post.id}`
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   async function loadComments() {
     if (showComments) { setShowComments(false); return }
@@ -136,12 +148,26 @@ export default function PostCard({ post, onDelete, onEdit }) {
         </div>
       </div>
 
-      <div className="border-t border-gray-50 px-4 py-2">
+      <div className="border-t border-gray-50 px-4 py-2 flex items-center justify-between">
         <button
           onClick={loadComments}
           className="text-xs text-gray-500 hover:text-primary-600 font-medium"
         >
           {loadingComments ? 'Yükleniyor...' : showComments ? `Yorumları Gizle (${comments.length})` : commentsLoaded ? `Yorumlar (${comments.length})` : 'Yorumlar'}
+        </button>
+        <button
+          onClick={handleShare}
+          className="text-xs text-gray-500 hover:text-primary-600 font-medium flex items-center gap-1.5 relative"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 10.742l4.636-2.318m0 0a3 3 0 102.686-2.686 3 3 0 00-2.686 2.686zm-4.636 2.318a3 3 0 10-2.686 2.686 3 3 0 002.686-2.686zm4.636 2.318l-4.636-2.318a3 3 0 11-2.686-2.686 3 3 0 012.686 2.686z" />
+          </svg>
+          Paylaş
+          {copied && (
+            <span className="absolute -top-8 right-0 bg-gray-900 text-white text-[9px] px-1.5 py-0.5 rounded shadow-md whitespace-nowrap z-10">
+              Kopyalandı!
+            </span>
+          )}
         </button>
       </div>
 

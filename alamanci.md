@@ -75,11 +75,17 @@
 - Tablolar: `friendships`, `direct_messages`, `event_messages`, `rsvps`, `comments`, `channels`, `posts`, `events`, `profiles`
 - RLS: `security definer` fonksiyonları (`get_is_admin()`, `get_is_approved()`)
 - Auth trigger `handle_new_user()`: yeni kayıtta `profiles`'a email de kaydedilir.
-- **Otomatik Onay E-postası Tetikleyicisi:** `profiles` tablosunda `status` değeri `'approved'` olarak güncellendiğinde `public.handle_status_approved` tetikleyicisi üzerinden Brevo API'si (`net.http_post`) doğrudan çağrılır ve otomatik mail gönderilir.
+- **Otomatik Bildirim Tetikleyicileri:** `send_notification_webhook` fonksiyonu aracılığıyla `send-notification` Edge Function tetiklenir:
+  - **Yeni Kayıt (pending):** Yeni üye kaydolduğunda *"Başvurunuz Değerlendiriliyor"* maili gider.
+  - **Üyelik Onayı (approved):** Üyelik onaylandığında *"Üyeliğiniz Onaylandı"* maili gider.
+  - **Etkinlik Güncellemesi:** Katılacağını belirten üyelere ( RSVP = `going`) etkinlik detayları değiştiğinde mail gider.
+  - **Yeni Yorum:** Bir gönderiye yorum yazıldığında gönderi sahibine bildirim gider.
+  - **Yorum Yanıtı:** Bir yoruma yanıt yazıldığında asıl yorum sahibine bildirim gider.
 - **Güvenli Üye Silme (RPC):** `public.delete_user` fonksiyonu ile bir üye silindiğinde hem `auth.users` kaydı hem de buna bağlı tüm veriler (profiles, posts, friendships, messages vb.) cascade olarak tamamen silinir.
 
 ## Supabase Edge Functions
-- `send-approval-email` (Alternatif/Yedek): Brevo API ile onay e-postası gönderen Deno/TypeScript fonksiyonu. (Projeye `supabase/` klasörü altına eklendi, ancak şu an veritabanı tetikleyicisi aktif olarak kullanılmaktadır).
+- `send-notification`: Deno/TypeScript ile yazılmış, **Resend API** (veya Brevo) kullanan entegre e-posta bildirim fonksiyonu. Veritabanı tetikleyicilerinden gelen istekleri doğrulamak için `x-notification-secret` güvenlik başlığını kullanır.
+- `send-approval-email` (Eski): Sadece onay maili gönderen eski Brevo Deno fonksiyonu.
 
 ## Proje Yapısı
 ```
@@ -90,6 +96,7 @@ src/
     ChannelDetail.jsx — Kanal gönderileri, şehir filtresi, admin düzenleme
     Events.jsx        — Etkinlik listesi + oluşturma (datetime-local)
     EventDetail.jsx   — Etkinlik detayları, RSVP, sohbet
+    PostDetail.jsx    — Gönderi detayları, yorumlar ve paylaşım
     Admin.jsx         — Kullanıcı yönetimi (silme işlemi güvenli RPC'ye bağlandı)
     Friends.jsx       — Arkadaşlık yönetimi
     Members.jsx       — Üye arama (Medeni durum ve Çocuk filtreleri eklendi)

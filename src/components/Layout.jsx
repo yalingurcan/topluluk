@@ -17,7 +17,7 @@ export default function Layout() {
     if (!profile) return
     const key = `profile_welcomed_${profile.id}`
     const isProfilePage = location.pathname === '/profil'
-    if (!isProfilePage && !profile.city && !profile.occupation && !localStorage.getItem(key)) {
+    if (!isProfilePage && !localStorage.getItem(key)) {
       localStorage.setItem(key, '1')
       navigate('/profil', { state: { welcome: true } })
     }

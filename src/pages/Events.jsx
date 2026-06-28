@@ -19,8 +19,20 @@ export default function Events() {
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState({ title: '', description: '', location: '', city: '', datetime: '', is_private: false })
   const [viewMode, setViewMode] = useState('list')
+  const [copiedId, setCopiedId] = useState(null)
 
   useEffect(() => { fetchData() }, [])
+
+  async function handleShare(eventId) {
+    try {
+      const url = `${window.location.origin}/etkinlikler/${eventId}`
+      await navigator.clipboard.writeText(url)
+      setCopiedId(eventId)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   async function fetchData() {
     const [{ data: ev }, { data: myRsvps }] = await Promise.all([
@@ -174,13 +186,29 @@ export default function Events() {
                     {ev.description && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{ev.description}</p>}
                     <p className="text-xs text-gray-400 mt-2">Düzenleyen: {ev.profiles?.full_name}</p>
                   </div>
-                  {(profile?.is_admin || profile?.id === ev.created_by) && (
-                    <button onClick={() => handleDelete(ev.id)} className="p-1.5 text-gray-300 hover:text-red-500 shrink-0">
+                  <div className="flex flex-col gap-1 items-center shrink-0">
+                    <button 
+                      onClick={() => handleShare(ev.id)} 
+                      className="p-1.5 text-gray-300 hover:text-primary-600 rounded-lg hover:bg-gray-50 flex items-center justify-center transition-colors relative"
+                      title="Paylaş"
+                    >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 10.742l4.636-2.318m0 0a3 3 0 102.686-2.686 3 3 0 00-2.686 2.686zm-4.636 2.318a3 3 0 10-2.686 2.686 3 3 0 002.686-2.686zm4.636 2.318l-4.636-2.318a3 3 0 11-2.686-2.686 3 3 0 012.686 2.686z" />
                       </svg>
+                      {copiedId === ev.id && (
+                        <span className="absolute -top-8 right-0 bg-gray-900 text-white text-[9px] px-1.5 py-0.5 rounded shadow-md whitespace-nowrap z-10">
+                          Kopyalandı!
+                        </span>
+                      )}
                     </button>
-                  )}
+                    {(profile?.is_admin || profile?.id === ev.created_by) && (
+                      <button onClick={() => handleDelete(ev.id)} className="p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-gray-50">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-2 mt-3 flex-wrap">

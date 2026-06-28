@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
@@ -9,6 +9,7 @@ import Channels from './pages/Channels'
 import ChannelDetail from './pages/ChannelDetail'
 import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
+import PostDetail from './pages/PostDetail'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 import Members from './pages/Members'
@@ -17,6 +18,7 @@ import Messages from './pages/Messages'
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { session, profile, loading } = useAuth()
+  const location = useLocation()
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -24,7 +26,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
     </div>
   )
 
-  if (!session) return <Navigate to="/giris" replace />
+  if (!session) return <Navigate to="/giris" state={{ from: location }} replace />
   if (profile?.status === 'pending') return <Navigate to="/beklemede" replace />
   if (profile?.status === 'rejected') return <Navigate to="/giris" replace />
   if (adminOnly && !profile?.is_admin) return <Navigate to="/" replace />
@@ -34,6 +36,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
 
 function PublicRoute({ children }) {
   const { session, profile, loading } = useAuth()
+  const location = useLocation()
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -42,7 +45,10 @@ function PublicRoute({ children }) {
   )
 
   if (session && profile?.status === 'pending') return <Navigate to="/beklemede" replace />
-  if (session && profile?.status === 'approved') return <Navigate to="/" replace />
+  if (session && profile?.status === 'approved') {
+    const from = location.state?.from?.pathname || "/"
+    return <Navigate to={from} replace />
+  }
 
   return children
 }
@@ -59,6 +65,7 @@ function AppRoutes() {
         <Route path="/konular/:id" element={<ChannelDetail />} />
         <Route path="/etkinlikler" element={<Events />} />
         <Route path="/etkinlikler/:id" element={<EventDetail />} />
+        <Route path="/gonderiler/:id" element={<PostDetail />} />
         <Route path="/profil" element={<Profile />} />
         <Route path="/uyeler" element={<Members />} />
         <Route path="/arkadaslar" element={<Friends />} />

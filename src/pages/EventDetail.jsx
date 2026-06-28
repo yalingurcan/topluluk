@@ -25,8 +25,19 @@ export default function EventDetail() {
   const [editMode, setEditMode] = useState(false)
   const [form, setForm] = useState({})
   const [activeTab, setActiveTab] = useState('details')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => { fetchData() }, [id])
+
+  async function handleShare() {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy link: ', err)
+    }
+  }
 
   async function fetchData() {
     const [{ data: ev }, { data: allRsvps }, { data: allComments }] = await Promise.all([
@@ -166,20 +177,36 @@ export default function EventDetail() {
             <>
               <div className="flex items-start justify-between gap-2">
                 <h1 className="text-xl font-bold text-gray-900">{event.title}</h1>
-                {canEdit && (
-                  <div className="flex gap-1 shrink-0">
-                    <button onClick={() => setEditMode(true)} className="p-1.5 text-gray-400 hover:text-primary-600">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button onClick={handleDelete} className="p-1.5 text-gray-400 hover:text-red-500">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
+                <div className="flex gap-1.5 shrink-0 items-center">
+                  <button 
+                    onClick={handleShare}
+                    className="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-gray-50 flex items-center gap-1 transition-colors relative"
+                    title="Paylaş"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 10.742l4.636-2.318m0 0a3 3 0 102.686-2.686 3 3 0 00-2.686 2.686zm-4.636 2.318a3 3 0 10-2.686 2.686 3 3 0 002.686-2.686zm4.636 2.318l-4.636-2.318a3 3 0 11-2.686-2.686 3 3 0 012.686 2.686z" />
+                    </svg>
+                    {copied && (
+                      <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded shadow-md whitespace-nowrap z-10 animate-fade-in-out">
+                        Link Kopyalandı!
+                      </span>
+                    )}
+                  </button>
+                  {canEdit && (
+                    <>
+                      <button onClick={() => setEditMode(true)} className="p-1.5 text-gray-400 hover:text-primary-600">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button onClick={handleDelete} className="p-1.5 text-gray-400 hover:text-red-500">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <p className="text-primary-600 font-medium text-sm">{formatDate(event.event_date)}</p>
