@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 import PostCard from '../components/PostCard'
 import CreatePostModal from '../components/CreatePostModal'
 
@@ -9,36 +10,87 @@ function formatEventDate(dt) {
 }
 
 export default function Feed() {
+  const { profile } = useAuth()
+  const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+  const [showBanner, setShowBanner] = useState(!localStorage.getItem('hideFeedBanner'))
+  const [follows, setFollows] = useState({ cities: [], channels: [] })
+  const menuRef = useRef(null)
 
   useEffect(() => { fetchFeed() }, [])
 
+  useEffect(() => {
+    function handleClick(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false)
+    }
+    if (showMenu) document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showMenu])
+
   async function fetchFeed() {
     setLoading(true)
+
+    // Fetch followed cities and channels
+    const [{ data: followedCities }, { data: followedChannels }] = await Promise.all([
+      supabase.from('city_follows').select('city_name').eq('user_id', profile.id),
+      supabase.from('channel_follows').select('channel_id').eq('user_id', profile.id)
+    ])
+
+    const myCities = (followedCities || []).map(f => f.city_name.toLowerCase())
+    const myChannels = (followedChannels || []).map(f => f.channel_id)
+    setFollows({ cities: myCities, channels: myChannels })
+
+    // Fetch posts and events
     const [{ data: postsData }, { data: eventsData }] = await Promise.all([
       supabase
         .from('posts')
-        .select('*, profiles(full_name), channels(name)')
+        .select('*, profiles(full_name, username), channels(name, city)')
         .order('created_at', { ascending: false })
-        .limit(30),
+        .limit(60),
       supabase
         .from('events')
-        .select('*, profiles!created_by(full_name)')
+        .select('*, profiles!created_by(full_name, username)')
         .order('created_at', { ascending: false })
-        .limit(15)
+        .limit(30)
     ])
 
+    // Filter based on follows (if any follows exist)
+    const hasFollows = myCities.length > 0 || myChannels.length > 0
+
+    const filteredPosts = (postsData || []).filter(post => {
+      if (!hasFollows) return true // Show all if no follows yet
+      
+      const channelCity = post.channels?.city?.toLowerCase()
+      const isChannelFollowed = myChannels.includes(post.channel_id)
+      const isCityFollowed = channelCity && myCities.includes(channelCity)
+
+      return isChannelFollowed || isCityFollowed
+    })
+
+    const filteredEvents = (eventsData || []).filter(event => {
+      if (!hasFollows) return true // Show all if no follows yet
+
+      const eventCity = event.city?.toLowerCase()
+      return eventCity && myCities.includes(eventCity)
+    })
+
     const merged = [
-      ...(postsData || []).map(p => ({ ...p, feedType: 'post' })),
-      ...(eventsData || []).map(e => ({ ...e, feedType: 'event' }))
+      ...filteredPosts.map(p => ({ ...p, feedType: 'post' })),
+      ...filteredEvents.map(e => ({ ...e, feedType: 'event' }))
     ]
 
     merged.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
     setItems(merged)
     setLoading(false)
+  }
+
+  const dismissBanner = () => {
+    localStorage.setItem('hideFeedBanner', 'true')
+    setShowBanner(false)
   }
 
   async function handleDelete(postId) {
@@ -54,17 +106,62 @@ export default function Feed() {
 
   return (
     <div>
+      {showBanner && (
+        <div className="bg-gradient-to-r from-primary-500/10 to-primary-500/[0.05] border border-primary-500/[0.15] rounded-2xl p-4 mb-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <span className="text-xl">📢</span>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-bold text-[var(--r-text)] text-sm mb-1">Kişiselleştirilmiş Akış</h4>
+              <p className="text-xs text-[var(--r-meta)] leading-relaxed">
+                Artık ana sayfa akışınızı kendiniz belirleyebilirsiniz! Şehirler ve Konular sayfalarından ilgilendiğiniz yerleri veya başlıkları takip ederek akışınızı özelleştirin. Henüz bir yeri takip etmiyorsanız şimdilik tüm paylaşımları görürsünüz.
+              </p>
+              <button
+                onClick={dismissBanner}
+                className="mt-3 bg-primary-600 hover:bg-primary-700 text-white text-[11px] font-semibold px-4 py-1.5 rounded-xl shadow-sm transition-all"
+              >
+                Anladım
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Ana Sayfa</h1>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary-700"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Paylaş
-        </button>
+        <h1 className="text-xl font-bold text-[var(--r-text)]">Ana Sayfa</h1>
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setShowMenu(m => !m)}
+            className="flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary-700"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Paylaş
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 top-full mt-2 w-44 bg-[var(--r-card)] border border-[var(--r-border)] rounded-2xl shadow-xl z-50 overflow-hidden">
+              <button
+                onClick={() => { setShowMenu(false); setShowCreate(true) }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--r-text)] hover:bg-[var(--r-hover)] transition-colors"
+              >
+                <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+                Gönderi
+              </button>
+              <div className="border-t border-[var(--r-border)]" />
+              <button
+                onClick={() => { setShowMenu(false); navigate('/etkinlikler?create=true') }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--r-text)] hover:bg-[var(--r-hover)] transition-colors"
+              >
+                <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Etkinlik
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -72,7 +169,7 @@ export default function Feed() {
           <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-[var(--r-meta)]">
           <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
           </svg>
@@ -92,26 +189,26 @@ export default function Feed() {
               )
             } else {
               return (
-                <div key={`event-${item.id}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden border-l-4 border-l-primary-500">
+                <div key={`event-${item.id}`} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm overflow-hidden border-l-4 border-l-primary-500 hover:bg-[var(--r-hover)] transition-colors duration-150">
                   {item.cover_image_url && (
                     <img src={item.cover_image_url} alt="" className="w-full h-40 object-cover" />
                   )}
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[10px] bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                      <span className="text-[10px] bg-primary-500/10 text-primary-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                         Etkinlik
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-[var(--r-meta)]">
                         {new Date(item.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} eklendi
                       </span>
                     </div>
                     <Link to={`/etkinlikler/${item.id}`}>
-                      <h3 className="font-semibold text-gray-900 hover:text-primary-600 text-sm">{item.title}</h3>
+                      <h3 className="font-semibold text-[var(--r-text)] hover:text-primary-600 text-sm">{item.title}</h3>
                     </Link>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <p className="text-xs text-primary-600 font-medium">📅 {formatEventDate(item.event_date)}</p>
                       {item.city && (
-                        <span className="text-xs bg-amber-100 text-gray-800 border border-amber-200 px-2.5 py-0.5 rounded-full font-semibold">
+                        <span className="text-xs bg-amber-500/10 text-[var(--r-text)] border border-amber-500/20 px-2.5 py-0.5 rounded-full font-semibold">
                           📍 {item.city}
                         </span>
                       )}
@@ -121,15 +218,21 @@ export default function Feed() {
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-xs text-gray-500 hover:text-primary-600 hover:underline mt-0.5 inline-flex items-center gap-1"
+                        className="text-xs text-[var(--r-meta)] hover:text-primary-600 hover:underline mt-0.5 inline-flex items-center gap-1"
                       >
                         📍 {item.location}
                       </a>
                     )}
-                    {item.description && <p className="text-xs text-gray-600 mt-2 line-clamp-2 leading-relaxed">{item.description}</p>}
-                    
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-                      <p className="text-[11px] text-gray-400">Düzenleyen: {item.profiles?.full_name}</p>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--r-border)]">
+                      <p className="text-[11px] text-[var(--r-meta)]">
+                        Düzenleyen:{' '}
+                        <button
+                          onClick={() => window.showUserProfile && window.showUserProfile(item.created_by)}
+                          className="text-primary-600 hover:underline font-semibold"
+                        >
+                          @{item.profiles?.username}
+                        </button>
+                      </p>
                       <Link to={`/etkinlikler/${item.id}`} className="text-xs text-primary-600 font-medium hover:underline">
                         Katıl ve Detaylar ➔
                       </Link>

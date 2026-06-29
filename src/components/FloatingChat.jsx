@@ -174,7 +174,9 @@ export default function FloatingChat() {
     // Double-check active friendship status
     const isFriend = friends.some(f => f.id === selectedPartnerId)
     if (!isFriend) {
-      alert('Bu kullanıcıya mesaj göndermek için arkadaş olmalısınız.')
+      alert('Arkadaşınız olmayan birine mesaj göndermek veya isteği yanıtlamak için Mesajlar sayfasına yönlendiriliyorsunuz.')
+      navigate(`/mesajlar?user=${selectedPartnerId}`)
+      setIsOpen(false)
       return
     }
 
@@ -226,8 +228,8 @@ export default function FloatingChat() {
   if (isMessagesPage) return null
 
   return (
-    <div className={`fixed bottom-0 right-4 md:right-8 z-40 bg-white border border-gray-200/80 shadow-2xl rounded-t-2xl flex flex-col transition-all duration-300 ease-in-out ${
-      isOpen ? 'h-[460px] w-80 md:w-96' : 'h-12 w-64 md:w-72 cursor-pointer hover:bg-gray-50'
+    <div className={`fixed bottom-0 right-4 md:right-8 z-40 bg-[var(--r-card)] border border-[var(--r-border)]/80 shadow-2xl rounded-t-2xl flex flex-col transition-all duration-300 ease-in-out ${
+      isOpen ? 'h-[460px] w-80 md:w-96' : 'h-12 w-64 md:w-72 cursor-pointer hover:bg-[var(--r-hover)]'
     }`} onClick={!isOpen ? toggleOpen : undefined}>
       
       {/* Collapsed Header */}
@@ -238,19 +240,19 @@ export default function FloatingChat() {
             {recentPartners.length > 0 ? (
               <div className="flex -space-x-2 mr-1">
                 {recentPartners.map(p => (
-                  <div key={p.id} className="w-6 h-6 rounded-full bg-primary-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-primary-700">
+                  <div key={p.id} className="w-6 h-6 rounded-full bg-primary-500/10 border-2 border-[var(--r-card)] flex items-center justify-center text-[10px] font-bold text-primary-600">
                     {p.full_name?.[0]?.toUpperCase()}
                   </div>
                 ))}
               </div>
             ) : (
-              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-[var(--r-meta)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             )}
-            <span className="text-sm font-semibold text-gray-800">Mesajlar</span>
+            <span className="text-sm font-semibold text-[var(--r-text)]">Mesajlar</span>
           </div>
-          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-[var(--r-meta)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
           </svg>
         </div>
@@ -258,7 +260,7 @@ export default function FloatingChat() {
         /* Expanded View */
         <>
           {/* Header */}
-          <div className="h-14 border-b border-gray-100 flex items-center justify-between px-4 shrink-0 bg-gray-50/30 rounded-t-2xl">
+          <div className="h-14 border-b border-[var(--r-border)] flex items-center justify-between px-4 shrink-0 bg-[var(--r-bg)]/30 rounded-t-2xl">
             {selectedPartnerId || isNewChatView ? (
               <div className="flex items-center gap-2">
                 <button
@@ -266,7 +268,7 @@ export default function FloatingChat() {
                     setSelectedPartnerId(null)
                     setIsNewChatView(false)
                   }}
-                  className="p-1 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  className="p-1 hover:bg-[var(--r-hover)] rounded-lg text-[var(--r-meta)] transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -274,21 +276,21 @@ export default function FloatingChat() {
                 </button>
                 {activePartner ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center border border-primary-100 text-xs font-bold text-primary-700">
+                    <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20 text-xs font-bold text-primary-600">
                       {activePartner.full_name?.[0]?.toUpperCase()}
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-900 text-xs leading-tight">{activePartner.full_name}</h4>
-                      <p className="text-[9px] text-gray-400">@{activePartner.username}</p>
+                      <h4 className="font-bold text-[var(--r-text)] text-xs leading-tight">{activePartner.full_name}</h4>
+                      <p className="text-[9px] text-[var(--r-meta)]">@{activePartner.username}</p>
                     </div>
                   </div>
                 ) : (
-                  <span className="text-sm font-bold text-gray-800">Yeni Sohbet</span>
+                  <span className="text-sm font-bold text-[var(--r-text)]">Yeni Sohbet</span>
                 )}
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-gray-800">Mesajlar</span>
+                <span className="text-sm font-bold text-[var(--r-text)]">Mesajlar</span>
               </div>
             )}
 
@@ -297,7 +299,7 @@ export default function FloatingChat() {
               {!selectedPartnerId && !isNewChatView && (
                 <button
                   onClick={() => setIsNewChatView(true)}
-                  className="action-btn p-1.5 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="action-btn p-1.5 text-[var(--r-meta)] hover:text-primary-600 hover:bg-[var(--r-hover)] rounded-lg transition-colors"
                   title="Yeni Sohbet Başlat"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,7 +309,7 @@ export default function FloatingChat() {
               )}
               <button
                 onClick={handleMaximize}
-                className="action-btn p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="action-btn p-1.5 text-[var(--r-meta)] hover:text-[var(--r-text)] hover:bg-[var(--r-hover)] rounded-lg transition-colors"
                 title="Tam Ekran Aç"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -316,7 +318,7 @@ export default function FloatingChat() {
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="action-btn p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="action-btn p-1.5 text-[var(--r-meta)] hover:text-[var(--r-text)] hover:bg-[var(--r-hover)] rounded-lg transition-colors"
                 title="Kapat"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -327,7 +329,7 @@ export default function FloatingChat() {
           </div>
 
           {/* Body Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col bg-white">
+          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col bg-[var(--r-card)]">
             {loading ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
@@ -335,9 +337,9 @@ export default function FloatingChat() {
             ) : isNewChatView ? (
               /* New Chat (Friends) List View */
               <div className="flex-1 flex flex-col p-3 space-y-2">
-                <div className="text-[10px] font-bold text-gray-400 uppercase px-1 tracking-wider mb-1">Arkadaşlarım</div>
+                <div className="text-[10px] font-bold text-[var(--r-meta)] uppercase px-1 tracking-wider mb-1">Arkadaşlarım</div>
                 {friends.length === 0 ? (
-                  <div className="text-center text-gray-400 text-xs py-10 px-4 leading-relaxed">
+                  <div className="text-center text-[var(--r-meta)] text-xs py-10 px-4 leading-relaxed">
                     Sohbet edebilmek için önce üyeler sayfasından arkadaş eklemelisiniz.
                   </div>
                 ) : (
@@ -353,14 +355,14 @@ export default function FloatingChat() {
                           setSelectedPartnerId(friend.id)
                           setIsNewChatView(false)
                         }}
-                        className="w-full p-2 rounded-xl hover:bg-primary-50/40 border border-gray-100 flex items-center gap-2.5 transition-all text-left"
+                        className="w-full p-2 rounded-xl hover:bg-primary-500/[0.06] border border-[var(--r-border)] flex items-center gap-2.5 transition-all text-left"
                       >
-                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center border border-primary-100 text-xs font-bold text-primary-700">
+                        <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20 text-xs font-bold text-primary-600">
                           {friend.full_name?.[0]?.toUpperCase()}
                         </div>
                         <div>
-                          <h4 className="font-bold text-gray-900 text-xs">{friend.full_name}</h4>
-                          <p className="text-[9px] text-gray-500">@{friend.username}</p>
+                          <h4 className="font-bold text-[var(--r-text)] text-xs">{friend.full_name}</h4>
+                          <p className="text-[9px] text-[var(--r-meta)]">@{friend.username}</p>
                         </div>
                       </button>
                     ))}
@@ -370,9 +372,9 @@ export default function FloatingChat() {
             ) : selectedPartnerId ? (
               /* Chat Stream View */
               <div className="flex-1 flex flex-col min-h-0">
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/10">
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[var(--r-bg)]/10">
                   {activeChatMessages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-1 text-center py-8">
+                    <div className="flex flex-col items-center justify-center h-full text-[var(--r-meta)] space-y-1 text-center py-8">
                       <span className="text-2xl">👋</span>
                       <p className="text-[11px]">Sohbeti başlatmak için ilk mesajı gönderin!</p>
                     </div>
@@ -390,11 +392,11 @@ export default function FloatingChat() {
                             <div className={`px-3 py-2 rounded-xl text-xs shadow-sm leading-relaxed ${
                               isMe 
                                 ? 'bg-primary-600 text-white rounded-tr-none' 
-                                : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-150'
+                                : 'bg-[var(--r-hover)] text-[var(--r-text)] rounded-tl-none border border-[var(--r-border)]'
                             }`}>
                               {msg.body}
                             </div>
-                            <span className="text-[8px] text-gray-400 select-none pb-0.5 shrink-0">
+                            <span className="text-[8px] text-[var(--r-meta)] select-none pb-0.5 shrink-0">
                               {timeStr}
                             </span>
                           </div>
@@ -407,13 +409,13 @@ export default function FloatingChat() {
 
                 {/* Footer Input Area */}
                 {friends.some(f => f.id === selectedPartnerId) ? (
-                  <form onSubmit={handleSend} className="p-2.5 border-t border-gray-100 flex gap-2 shrink-0 bg-white">
+                  <form onSubmit={handleSend} className="p-2.5 border-t border-[var(--r-border)] flex gap-2 shrink-0 bg-[var(--r-card)]">
                     <input
                       type="text"
                       value={inputText}
                       onChange={e => setInputText(e.target.value)}
                       placeholder="Mesajınızı yazın..."
-                      className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="flex-1 border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                     <button
                       type="submit"
@@ -428,16 +430,16 @@ export default function FloatingChat() {
                     </button>
                   </form>
                 ) : (
-                  <div className="p-3 border-t border-gray-100 bg-gray-50 text-center text-[10px] text-gray-500 font-medium">
+                  <div className="p-3 border-t border-[var(--r-border)] bg-[var(--r-bg)] text-center text-[10px] text-[var(--r-meta)] font-medium">
                     🔒 Bu kullanıcıya mesaj göndermek için arkadaş olmalısınız.
                   </div>
                 )}
               </div>
             ) : (
               /* Chat Conversations List View */
-              <div className="flex-1 divide-y divide-gray-50 overflow-y-auto">
+              <div className="flex-1 divide-y divide-[var(--r-border)] overflow-y-auto">
                 {activeConversations.length === 0 ? (
-                  <div className="p-8 text-center text-gray-400 text-xs leading-relaxed">
+                  <div className="p-8 text-center text-[var(--r-meta)] text-xs leading-relaxed">
                     Aktif sohbetiniz bulunmuyor.<br />
                     <button
                       onClick={() => setIsNewChatView(true)}
@@ -456,17 +458,17 @@ export default function FloatingChat() {
                       <button
                         key={c.partner.id}
                         onClick={() => setSelectedPartnerId(c.partner.id)}
-                        className="w-full p-3.5 text-left hover:bg-gray-50/50 transition-colors flex gap-2.5 items-center"
+                        className="w-full p-3.5 text-left hover:bg-[var(--r-hover)]/50 transition-colors flex gap-2.5 items-center"
                       >
-                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center shrink-0 border border-primary-100 text-xs font-bold text-primary-700">
+                        <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20 text-xs font-bold text-primary-600">
                           {c.partner.full_name?.[0]?.toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-baseline mb-0.5">
-                            <h4 className="font-bold text-gray-900 text-xs truncate">{c.partner.full_name}</h4>
-                            <span className="text-[9px] text-gray-400 shrink-0">{timeStr}</span>
+                            <h4 className="font-bold text-[var(--r-text)] text-xs truncate">{c.partner.full_name}</h4>
+                            <span className="text-[9px] text-[var(--r-meta)] shrink-0">{timeStr}</span>
                           </div>
-                          <p className="text-[11px] text-gray-500 truncate">{c.lastMessage.body}</p>
+                          <p className="text-[11px] text-[var(--r-meta)] truncate">{c.lastMessage.body}</p>
                         </div>
                       </button>
                     )

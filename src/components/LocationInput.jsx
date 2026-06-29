@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
-export default function LocationInput({ value, onChange, onCityChange, placeholder, className }) {
+export default function LocationInput({ value, onChange, onCityChange, placeholder, className, cityName = '', disabled = false }) {
   const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -18,22 +18,20 @@ export default function LocationInput({ value, onChange, onCityChange, placehold
   }, [])
 
   const fetchSuggestions = async (query) => {
-    if (!query || query.trim().length < 3) {
+    if (!query || query.trim().length < 2) {
       setSuggestions([])
       return
     }
     setLoading(true)
     try {
+      // Prioritize Germany by bounding query, and combine with selected cityName if provided for context
+      // Photon API is powered by Elasticsearch and supports extremely high writing-tolerance fuzzy search
+      const searchQuery = cityName ? `${query}, ${cityName}` : query
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'CommunityApp/1.0'
-          }
-        }
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(searchQuery)}&limit=8&lang=de`
       )
       const data = await response.json()
-      setSuggestions(data || [])
+      setSuggestions(data.features || [])
       setShowDropdown(true)
     } catch (error) {
       console.error('Error fetching location suggestions:', error)
@@ -44,7 +42,18 @@ export default function LocationInput({ value, onChange, onCityChange, placehold
 
   const handleInputChange = (e) => {
     const val = e.target.value
-    onChange(val)
+    onChange(val) // Update the parent component state immediately on keystroke
+
+    // Try to guess a city from the free text if possible for onCityChange
+    if (onCityChange) {
+      const parts = val.split(',')
+      if (parts.length > 1) {
+        const potentialCity = parts[parts.length - 1].trim()
+        if (potentialCity.length > 2 && !/\d/.test(potentialCity)) {
+          onCityChange(potentialCity)
+        }
+      }
+    }
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current)
@@ -52,14 +61,26 @@ export default function LocationInput({ value, onChange, onCityChange, placehold
 
     debounceRef.current = setTimeout(() => {
       fetchSuggestions(val)
-    }, 450)
+    }, 400)
   }
 
   const handleSelect = (item) => {
-    onChange(item.display_name)
-    if (onCityChange) {
-      const addr = item.address || {}
-      const city = addr.city || addr.town || addr.village || addr.municipality || ''
+    const p = item.properties || {}
+    const name = p.name || ''
+    const street = p.street ? `${p.street} ${p.housenumber || ''}`.trim() : ''
+    const city = p.city || p.town || p.district || ''
+    const zip = p.postcode || ''
+    
+    // Format full address neatly
+    const addressParts = []
+    if (name) addressParts.push(name)
+    if (street && street !== name) addressParts.push(street)
+    if (city) addressParts.push(zip ? `${zip} ${city}` : city)
+    
+    const displayName = addressParts.join(', ')
+
+    onChange(displayName)
+    if (onCityChange && city) {
       onCityChange(city)
     }
     setShowDropdown(false)
@@ -69,6 +90,7 @@ export default function LocationInput({ value, onChange, onCityChange, placehold
     <div ref={containerRef} className="relative w-full">
       <div className="relative flex items-center">
         <input
+          disabled={disabled}
           type="text"
           value={value || ''}
           onChange={handleInputChange}
@@ -76,7 +98,7 @@ export default function LocationInput({ value, onChange, onCityChange, placehold
             if (suggestions.length > 0) setShowDropdown(true)
           }}
           placeholder={placeholder || 'Adres veya yer adı'}
-          className={className || "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"}
+          className={className || "w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"}
         />
         {loading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -86,27 +108,37 @@ export default function LocationInput({ value, onChange, onCityChange, placehold
       </div>
 
       {showDropdown && suggestions.length > 0 && (
-        <div className="absolute z-[100] left-0 right-0 mt-1.5 bg-white/95 backdrop-blur-md border border-gray-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto py-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="absolute z-[100] left-0 right-0 mt-1.5 bg-[var(--r-card)] backdrop-blur-md border border-[var(--r-border)] rounded-2xl shadow-xl max-h-60 overflow-y-auto py-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
           {suggestions.map((item, idx) => {
-            const displayName = item.display_name || ''
-            const parts = displayName.split(',')
-            const mainText = parts[0]?.trim()
-            const secondaryText = parts.slice(1).map(p => p.trim()).join(', ')
+            const p = item.properties || {}
+            
+            // Build visual representation
+            const mainText = p.name || p.street || 'Konum'
+            
+            const secondaryParts = []
+            // If name is mainText, put street in secondary
+            if (p.name && p.street) {
+              secondaryParts.push(`${p.street} ${p.housenumber || ''}`.trim())
+            }
+            const cityPart = p.postcode ? `${p.postcode} ${p.city || ''}`.trim() : p.city || ''
+            if (cityPart) secondaryParts.push(cityPart)
+            
+            const secondaryText = secondaryParts.join(', ')
 
             return (
               <button
-                key={item.place_id || idx}
+                key={idx}
                 type="button"
                 onClick={() => handleSelect(item)}
-                className="w-full px-4 py-2.5 text-left text-xs hover:bg-primary-50 hover:text-primary-700 transition-colors flex items-start gap-2.5 border-b border-gray-50/50 last:border-0"
+                className="w-full px-4 py-2.5 text-left text-xs hover:bg-primary-500/10 hover:text-primary-600 transition-colors flex items-start gap-2.5 border-b border-[var(--r-border)]/50 last:border-0"
               >
                 <span className="text-sm mt-0.5 shrink-0">📍</span>
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">
-                    {mainText || 'Konum'}
+                  <p className="font-semibold text-[var(--r-text)] truncate">
+                    {mainText}
                   </p>
                   {secondaryText && (
-                    <p className="text-gray-500 truncate mt-0.5">
+                    <p className="text-[var(--r-meta)] truncate mt-0.5">
                       {secondaryText}
                     </p>
                   )}

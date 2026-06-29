@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -15,6 +16,8 @@ import Admin from './pages/Admin'
 import Members from './pages/Members'
 import Friends from './pages/Friends'
 import Messages from './pages/Messages'
+import Cities from './pages/Cities'
+import CityDetail from './pages/CityDetail'
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { session, profile, loading } = useAuth()
@@ -70,6 +73,8 @@ function AppRoutes() {
         <Route path="/uyeler" element={<Members />} />
         <Route path="/arkadaslar" element={<Friends />} />
         <Route path="/mesajlar" element={<Messages />} />
+        <Route path="/sehirler" element={<Cities />} />
+        <Route path="/sehirler/:sehirAdi" element={<CityDetail />} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -80,9 +85,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   )
 }

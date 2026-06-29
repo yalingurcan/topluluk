@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import LocationInput from '../components/LocationInput'
 import EventMap from '../components/EventMap'
+import { CITIES } from '../components/AutocompleteInput'
 
 function formatDate(dt) {
   return new Date(dt).toLocaleString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -11,15 +12,32 @@ function formatDate(dt) {
 
 export default function Events() {
   const { profile } = useAuth()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const defaultCity = searchParams.get('city') || ''
+
   const [events, setEvents] = useState([])
   const [rsvps, setRsvps] = useState({})
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [createError, setCreateError] = useState('')
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', location: '', city: '', datetime: '', is_private: false })
+  const [form, setForm] = useState({ title: '', description: '', location: '', city: defaultCity || '', datetime: '', is_private: false })
   const [viewMode, setViewMode] = useState('list')
   const [copiedId, setCopiedId] = useState(null)
+
+  useEffect(() => {
+    // If defaultCity is changed, update the form city too
+    if (defaultCity) {
+      setForm(f => ({ ...f, city: defaultCity }))
+    }
+  }, [defaultCity])
+
+  useEffect(() => {
+    if (searchParams.get('create') === 'true') {
+      setShowCreate(true)
+    }
+  }, [searchParams])
 
   useEffect(() => { fetchData() }, [])
 
@@ -36,7 +54,7 @@ export default function Events() {
 
   async function fetchData() {
     const [{ data: ev }, { data: myRsvps }] = await Promise.all([
-      supabase.from('events').select('*, profiles!created_by(full_name)').order('event_date', { ascending: true }),
+      supabase.from('events').select('*, profiles!created_by(full_name, username)').order('event_date', { ascending: true }),
       supabase.from('rsvps').select('event_id, status').eq('user_id', profile.id)
     ])
     setEvents(ev || [])
@@ -74,7 +92,7 @@ export default function Events() {
         is_private: form.is_private,
         created_by: profile.id
       })
-      .select('*, profiles!created_by(full_name)')
+      .select('*, profiles!created_by(full_name, username)')
       .single()
     setCreating(false)
     if (error) { setCreateError(error.message); return }
@@ -84,29 +102,29 @@ export default function Events() {
   }
 
   async function handleDelete(eventId) {
-    if (!confirm('Bu etkinliği silmek istediğinize emin misiniz?')) return
+    if (!confirm('Bu etkinligi silmek istediginize emin misiniz?')) return
     await supabase.from('events').delete().eq('id', eventId)
     setEvents(ev => ev.filter(e => e.id !== eventId))
   }
 
   const rsvpOptions = [
-    { status: 'going', label: '👍 Katılıyorum', color: 'green' },
-    { status: 'notgoing', label: '👎 Katılmıyorum', color: 'red' },
+    { status: 'going', label: 'Katılıyorum', color: 'green' },
+    { status: 'notgoing', label: 'Katılmıyorum', color: 'red' },
   ]
 
   return (
-    <div>
+    <div className="pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex items-center justify-between sm:justify-start gap-4">
-          <h1 className="text-xl font-bold text-gray-900">Etkinlikler</h1>
-          <div className="flex bg-gray-100/80 rounded-xl p-0.5 border border-gray-200/50">
+          <h1 className="text-xl font-bold text-[var(--r-text)]">Etkinlikler</h1>
+          <div className="flex bg-[var(--r-hover)]/80 rounded-xl p-0.5 border border-[var(--r-border)]/50">
             <button
               type="button"
               onClick={() => setViewMode('list')}
               className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
                 viewMode === 'list' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-900'
+                  ? 'bg-[var(--r-card)] text-[var(--r-text)] shadow-sm' 
+                  : 'text-[var(--r-meta)] hover:text-[var(--r-text)]'
               }`}
             >
               Liste
@@ -116,8 +134,8 @@ export default function Events() {
               onClick={() => setViewMode('map')}
               className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
                 viewMode === 'map' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-900'
+                  ? 'bg-[var(--r-card)] text-[var(--r-text)] shadow-sm' 
+                  : 'text-[var(--r-meta)] hover:text-[var(--r-text)]'
               }`}
             >
               Harita
@@ -131,7 +149,7 @@ export default function Events() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Etkinlik Ekle
+          Etkinlik Oluştur
         </button>
       </div>
 
@@ -146,88 +164,68 @@ export default function Events() {
           <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : events.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 text-sm">Henüz etkinlik yok.</div>
+        <div className="text-center py-16 text-[var(--r-meta)] text-sm">Henüz etkinlik yok.</div>
       ) : (
         <div className="space-y-4">
           {events.map(ev => (
-            <div key={ev.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div
+              key={ev.id}
+              onClick={() => navigate(`/etkinlikler/${ev.id}`)}
+              className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm overflow-hidden cursor-pointer border-l-4 border-l-primary-500 hover:bg-[var(--r-hover)] transition-colors duration-150"
+            >
               {ev.cover_image_url && (
                 <img src={ev.cover_image_url} alt="" className="w-full h-40 object-cover" />
               )}
               <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <Link to={`/etkinlikler/${ev.id}`}>
-                      <h3 className="font-semibold text-gray-900 hover:text-primary-600">{ev.title}</h3>
-                    </Link>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <p className="text-xs text-primary-600 font-medium">{formatDate(ev.event_date)}</p>
-                      {ev.city && (
-                        <span className="text-xs bg-amber-100 text-gray-800 border border-amber-200 px-2.5 py-0.5 rounded-full font-semibold">
-                          📍 {ev.city}
-                        </span>
-                      )}
-                      {ev.is_private && (
-                        <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                          🔒 Özel
-                        </span>
-                      )}
-                    </div>
-                    {ev.location && (
-                      <a 
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}`}
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-xs text-gray-500 hover:text-primary-600 hover:underline mt-0.5 inline-flex items-center gap-1"
-                      >
-                        📍 {ev.location}
-                      </a>
-                    )}
-                    {ev.description && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{ev.description}</p>}
-                    <p className="text-xs text-gray-400 mt-2">Düzenleyen: {ev.profiles?.full_name}</p>
-                  </div>
-                  <div className="flex flex-col gap-1 items-center shrink-0">
-                    <button 
-                      onClick={() => handleShare(ev.id)} 
-                      className="p-1.5 text-gray-300 hover:text-primary-600 rounded-lg hover:bg-gray-50 flex items-center justify-center transition-colors relative"
-                      title="Paylaş"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 10.742l4.636-2.318m0 0a3 3 0 102.686-2.686 3 3 0 00-2.686 2.686zm-4.636 2.318a3 3 0 10-2.686 2.686 3 3 0 002.686-2.686zm4.636 2.318l-4.636-2.318a3 3 0 11-2.686-2.686 3 3 0 012.686 2.686z" />
-                      </svg>
-                      {copiedId === ev.id && (
-                        <span className="absolute -top-8 right-0 bg-gray-900 text-white text-[9px] px-1.5 py-0.5 rounded shadow-md whitespace-nowrap z-10">
-                          Kopyalandı!
-                        </span>
-                      )}
-                    </button>
-                    {(profile?.is_admin || profile?.id === ev.created_by) && (
-                      <button onClick={() => handleDelete(ev.id)} className="p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-gray-50">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] bg-primary-500/10 text-primary-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                    Etkinlik
+                  </span>
+                  {ev.is_private && (
+                    <span className="text-[10px] bg-amber-500/10 text-amber-600 border border-amber-500/20 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                      Özel
+                    </span>
+                  )}
+                  <span className="text-xs text-[var(--r-meta)]">
+                    {new Date(ev.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} eklendi
+                  </span>
                 </div>
-
-                <div className="flex gap-2 mt-3 flex-wrap">
-                  {rsvpOptions.map(({ status, label, color }) => (
+                <h3 className="font-semibold text-[var(--r-text)] text-sm">{ev.title}</h3>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <p className="text-xs text-primary-600 font-medium">📅 {formatDate(ev.event_date)}</p>
+                  {ev.city && (
+                    <span className="text-xs bg-amber-500/10 text-[var(--r-text)] border border-amber-500/20 px-2.5 py-0.5 rounded-full font-semibold">
+                      📍 {ev.city}
+                    </span>
+                  )}
+                </div>
+                {ev.location && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={e => e.stopPropagation()}
+                    className="text-xs text-[var(--r-meta)] hover:text-primary-600 hover:underline mt-0.5 inline-flex items-center gap-1"
+                  >
+                    📍 {ev.location}
+                  </a>
+                )}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--r-border)]">
+                  <p className="text-[11px] text-[var(--r-meta)]" onClick={e => e.stopPropagation()}>
+                    Düzenleyen:{' '}
                     <button
-                      key={status}
-                      onClick={() => setRsvp(ev.id, status)}
-                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors border ${
-                        rsvps[ev.id] === status
-                          ? color === 'green' ? 'bg-green-50 text-green-700 border-green-200'
-                          : 'bg-red-50 text-red-700 border-red-200'
-                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
-                      }`}
+                      onClick={() => window.showUserProfile && window.showUserProfile(ev.created_by)}
+                      className="text-primary-600 hover:underline font-semibold"
                     >
-                      {label}
+                      @{ev.profiles?.username}
                     </button>
-                  ))}
-                  <Link to={`/etkinlikler/${ev.id}`} className="text-xs text-primary-600 px-3 py-1.5 hover:underline ml-auto">
-                    Detaylar →
+                  </p>
+                  <Link
+                    to={`/etkinlikler/${ev.id}`}
+                    onClick={e => e.stopPropagation()}
+                    className="text-xs text-primary-600 font-medium hover:underline"
+                  >
+                    Katıl ve Detaylar →
                   </Link>
                 </div>
               </div>
@@ -238,10 +236,10 @@ export default function Events() {
 
       {showCreate && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white w-full md:max-w-lg md:rounded-2xl rounded-t-2xl p-5 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--r-card)] w-full md:max-w-lg md:rounded-2xl rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto pb-24 md:pb-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-900">Yeni Etkinlik</h2>
-              <button onClick={() => setShowCreate(false)} className="text-gray-400">
+              <h2 className="font-semibold text-[var(--r-text)]">Yeni Etkinlik</h2>
+              <button onClick={() => setShowCreate(false)} className="text-[var(--r-meta)]">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -249,36 +247,57 @@ export default function Events() {
             </div>
             <form onSubmit={handleCreate} className="space-y-3">
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Başlık *</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Baslik *</label>
                 <input
                   required
                   type="text"
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Etkinlik adı"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Tarih ve Saat *</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Tarih ve Saat *</label>
                 <input
                   required
                   type="datetime-local"
                   value={form.datetime}
                   onChange={e => setForm(f => ({ ...f, datetime: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Konum</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">
+                  Şehir * {defaultCity && <span className="text-[var(--r-meta)] font-normal">(Kilitli)</span>}
+                </label>
+                <select
+                  required
+                  disabled={!!defaultCity}
+                  value={form.city}
+                  onChange={e => setForm(f => ({ ...f, city: e.target.value, location: '' }))}
+                  className={`w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                    defaultCity ? 'text-[var(--r-meta)] cursor-not-allowed font-medium' : ''
+                  }`}
+                >
+                  <option value="">Şehir seçin</option>
+                  {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Konum *</label>
                 <LocationInput
+                  disabled={!form.city}
+                  cityName={form.city}
                   value={form.location}
                   onChange={val => setForm(f => ({ ...f, location: val }))}
-                  onCityChange={city => setForm(f => ({ ...f, city }))}
-                  placeholder="Adres veya yer adı"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder={form.city ? `${form.city} içinde adres veya mekan adı...` : 'Lütfen önce şehir seçin'}
+                  className={`w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                    !form.city ? 'text-[var(--r-meta)] cursor-not-allowed' : ''
+                  }`}
                 />
-                <span className="text-[10px] text-gray-400 mt-1 block">
+                <span className="text-[10px] text-[var(--r-meta)] mt-1 block">
                   İpucu: Yazdığınız konum Google Haritalar linkine dönüştürülecektir.
                 </span>
               </div>
@@ -288,23 +307,23 @@ export default function Events() {
                   id="is_private"
                   checked={form.is_private}
                   onChange={e => setForm(f => ({ ...f, is_private: e.target.checked }))}
-                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 h-4 w-4"
+                  className="rounded border-[var(--r-input-border)] text-primary-600 focus:ring-primary-500 h-4 w-4"
                 />
-                <label htmlFor="is_private" className="text-xs font-medium text-gray-700 select-none">
-                  🔒 Sadece arkadaşlarıma özel (Gizli Etkinlik)
+                <label htmlFor="is_private" className="text-xs font-medium text-[var(--r-text)] select-none">
+                  Sadece arkadaşlarıma özel (Gizli Etkinlik)
                 </label>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Açıklama</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Açıklama</label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={3}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                   placeholder="Etkinlik hakkında bilgi..."
                 />
               </div>
-              {createError && <div className="bg-red-50 text-red-700 text-xs px-3 py-2 rounded-lg">{createError}</div>}
+              {createError && <div className="bg-red-500/10 text-red-500 text-xs px-3 py-2 rounded-lg">{createError}</div>}
               <button type="submit" disabled={creating} className="w-full bg-primary-600 text-white py-2.5 rounded-xl font-medium text-sm disabled:opacity-60">
                 {creating ? 'Oluşturuluyor...' : 'Etkinlik Oluştur'}
               </button>

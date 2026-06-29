@@ -16,9 +16,12 @@ const GroupIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 )
-const MemberIcon = () => (
+const CityIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 )
 const ProfileIcon = () => (
@@ -30,8 +33,8 @@ const ProfileIcon = () => (
 const navItems = [
   { to: '/', label: 'Ana Sayfa', Icon: HomeIcon, exact: true },
   { to: '/etkinlikler', label: 'Etkinlikler', Icon: EventIcon },
+  { to: '/sehirler', label: 'Şehirler', Icon: CityIcon },
   { to: '/konular', label: 'Konular', Icon: GroupIcon },
-  { to: '/uyeler', label: 'Üyeler', Icon: MemberIcon },
   { to: '/profil', label: 'Profil', Icon: ProfileIcon },
 ]
 
@@ -39,7 +42,7 @@ export default function BottomNav() {
   const { profile } = useAuth()
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-bottom z-50">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--r-nav)] border-t border-[var(--r-border)] safe-bottom z-50">
       <div className="flex">
         {navItems.map(({ to, label, Icon, exact }) => (
           <NavLink
@@ -48,7 +51,7 @@ export default function BottomNav() {
             end={exact}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center py-2 text-xs transition-colors ${
-                isActive ? 'text-primary-600' : 'text-gray-500'
+                isActive ? 'text-primary-500' : 'text-[var(--r-meta)] hover:text-[var(--r-text)]'
               }`
             }
           >

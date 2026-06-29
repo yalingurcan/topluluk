@@ -37,36 +37,82 @@
 ### 3. Etkinlikler ve Konum
 - **Etkinlik Oluşturma:** Tarih ve saat için tek `datetime-local` input (iOS Safari uyumlu). Konum alanı LocationInput ile Nominatim otomatik tamamlama sunar.
 - **Şehir Otomatik Tespiti:** Konum seçilince Nominatim'den `address.city/town/village` çekilerek events tablosuna `city` kaydedilir.
-- **Şehir Badge:** Etkinlik kartlarında (Feed.jsx, Events.jsx, EventDetail.jsx) amber arka plan + koyu yazı badge olarak şehir gösterilir.
-- **Özel/Genel Etkinlikler:** "Sadece Arkadaşlar" seçeneği. Özel etkinlikler kilit simgesiyle işaretlenir.
-- **RSVP:** 👍 Katılıyorum / 👎 Katılmıyorum.
-- **EventMap:** Haritada etkinlikler gün+ay kısaltması ("25 Haz") gösteren marker ile gösterilir. Popup "Etkinlik Detayı" butonu inline stil ile düzgün görünür.
+- **Şehir Badge:** Etkinlik kartlarında (Feed.jsx, Events.jsx, EventDetail.jsx) amber arka plan badge olarak şehir gösterilir.
+- **Özel/Genel Etkinlikler:** "Sadece Arkadaşlar" seçeneği. Özel etkinlikler "Özel" badge ile işaretlenir.
+- **RSVP:** Sadece 👍 Katılıyorum butonu (sağa yaslanmış, sayı ile birlikte). Katılmıyorum butonu kaldırıldı.
+- **Davet:** Etkinlik detay sayfasında "Arkadaşlarını Davet Et" modalı — arkadaş listesinden seçip davet mesajı DM olarak gider.
+- **EventMap:** Haritada etkinlikler gün+ay kısaltması gösteren marker ile gösterilir.
 
 ### 4. Forumlar / Konular
 - **Sekmeli Yapı:** "Genel Konular" ve "Şehir Grupları" sekmeleri.
-- **Gönderi Oluştururken Şehir Seçimi:** İsteğe bağlı şehir seçeneği var (dropdown). Gönderilerde şehir badge olarak gösterilir.
+- **Gönderi Oluştururken Şehir Seçimi:** İsteğe bağlı şehir seçeneği var. Gönderilerde şehir badge olarak gösterilir.
 - **Şehir Filtresi:** Kanal detay sayfasında şehre göre gönderi filtresi var.
-- **Yorum Sayısı:** Yorumlar butonu "Yorumlar (3)" şeklinde sayıyı gösterir (yüklenince).
-- **PostCard Spacing:** Rozet ile başlık arasında `mb-3` boşluk.
-- **Admin Yönetimi:** Kullanıcı onaylama (onaylayınca Brevo e-postası gider), admin rolü, askıya alma, silme (artık veritabanından tamamen siler).
-- **Çıkış Yap Yönlendirmesi:** `Pending.jsx` sayfasında onay bekleyen kullanıcılar "Çıkış Yap" butonuna bastığında otomatik olarak `/giris` sayfasına yönlendirilir.
+- **Yorum Sayısı:** Yorumlar butonu "Yorumlar (3)" şeklinde sayıyı gösterir.
+- **Admin Yönetimi:** Kullanıcı onaylama, admin rolü, askıya alma, silme (güvenli RPC ile tamamen siler).
 
-### 6. Arayüz ve Tasarım
-- **Mobil Header:** `md:hidden` fixed header — sol "Alamancı" başlığı, sağ mesajlar ikonu. Mesaj ikonu üzerinde okunmamış mesaj sayısı kırmızı badge gösterilir, `/mesajlar`'a girilince sıfırlanır.
-- **iOS Safari Zoom Fix:** `maximum-scale=1.0` viewport meta ile otomatik zoom önlendi.
-- **Navigasyon:** BottomNav (mobil) + TopNav (masaüstü).
-- **PWA Desteği:** Manifest, service worker, akıllı PWA yükleme yönlendirmesi (`PWAInstallPrompt.jsx` - iOS ve Android için özel yükleme akışları sunar, bilgisayarlarda `lg:hidden` ile gizlenir) ve 3D "A" logosu (`favicon.svg`, `pwa-192x192.png`, `pwa-512x512.png`, `apple-touch-icon.png` dosyaları güncellendi).
+### 5. Ana Sayfa (Feed.jsx)
+- **Paylaş Butonu — İki Seçenek:** Paylaş butonuna tıklayınca dropdown çıkar:
+  - **Gönderi** → `CreatePostModal` açılır
+  - **Etkinlik** → `/etkinlikler?create=true` sayfasına yönlendirir, etkinlik oluşturma formu otomatik açılır
+- **Kişiselleştirilmiş Akış:** Şehirler ve Konular sayfalarından takip edilen içerikler önce gösterilir. Banner bir kez gösterilir (localStorage).
+- **Kart Yapısı:** Etkinlik ve gönderi kartları ayrı stil, etkinlik kartlarında sol turuncu çizgi (border-l-4).
+- **Kartlarda açıklama gösterilmez** — detay sayfasına tıklayınca görünür.
 
-### 7. Mesajlaşma
-- **FloatingChat.jsx:** Hook violation düzeltildi — `isMessagesPage` kontrolü tüm hook'lardan sonra yapılır. `/mesajlar` sayfasında FloatingChat render edilmez.
-- **Messages.jsx:** Mobil yükseklik `h-[calc(100dvh-160px)]` ile düzeltildi (100dvh iOS Safari adres çubuğunu da hesaplar).
-- **Mobil Erişim:** Mobil header'daki mesaj ikonundan direkt `/mesajlar` sayfasına erişilebilir.
+### 6. Arayüz ve Tasarım — Reddit Dark Mode Sistemi
+- **CSS Değişkenleri (`src/index.css`):**
+  ```css
+  :root {
+    --r-bg: #FFFFFF; --r-card: #FFFFFF; --r-nav: #FFFFFF;
+    --r-border: #EDEFF1; --r-text: #1C1C1C; --r-meta: #878A8C;
+    --r-hover: #F6F7F8; --r-input: #F6F7F8; --r-input-border: #EDEFF1;
+  }
+  html.dark {
+    --r-bg: #0D0D0E; --r-card: #1A1A1B; --r-nav: #1A1A1B;
+    --r-border: #2D2D2E; --r-text: #D7DADC; --r-meta: #818384;
+    --r-hover: #313135; --r-input: #1A1A1B; --r-input-border: #2D2D2E;
+  }
+  ```
+- **Kart Hover Efekti:** Tüm interaktif kartlarda `hover:bg-[var(--r-hover)] transition-colors duration-150` var (PostCard, etkinlik kartları, üye kartları, arkadaş kartları, kanal kartları).
+- **Opacity-based renkler:** `bg-primary-500/10`, `text-primary-600`, `border-primary-500/20` gibi opacity tabanlı renkler kullanılır (light/dark modda otomatik çalışır).
+- **Tema Seçici:** TopNav ve mobil header'a açık/koyu mod geçiş butonu eklendi. Tercih `localStorage`'da saklanır. `ThemeContext.jsx` ile yönetilir.
+- **Tüm sayfalar dark/light mode uyumlu:** Feed, Events, EventDetail, Channels, ChannelDetail, Friends, Members, Admin, Pending, Messages, FloatingChat, PostCard, CityDetail.
+
+### 7. Etkinlik Detay Sayfası (EventDetail.jsx)
+- **Konum linki:** Altı çizili değil, `text-[var(--r-text)]` (beyaz/dark mod uyumlu). Hover'da hafif opacity + yukarı kayma animasyonu.
+- **Davet Et / Paylaş butonları:** Nötr `--r-hover` arka plan, `--r-text` renk (turuncu değil sekonder).
+- **Katılım Durumu:** Sadece 👍 Katılıyorum butonu, sağa hizalı, sayı badge ile.
+- **Sekmeler:** "Katılımcılar & Yorumlar" ve "Etkinlik Sohbeti LIVE".
+- **Yorumlar:** Yorum yazın... / Cevap yazın... inputlar + Gönder butonu.
+
+### 8. Kart Tasarımı Standardı
+- **Feed etkinlik kartı:** `border-l-4 border-l-primary-500`, badge "ETKİNLİK", tarih (turuncu), şehir badge, konum linki, "Düzenleyen / Katıl ve Detaylar →" alt satır.
+- **Events sayfası kartları:** Feed ile aynı tasarım (badge, tarih, şehir, konum, Düzenleyen / Katıl ve Detaylar →).
+- **PostCard:** Gönderi kartlarında başlık, yorum/beğeni satırı. **Açıklama/body kartlarda gösterilmez.**
+- **Tüm kartlarda açıklama kaldırıldı** — sadece detay sayfasında görünür.
+
+### 9. Türkçe Karakter Düzeltmeleri
+Tüm sayfalarda Türkçe karakterler düzeltildi:
+- `Gonder` → `Gönder`, `Olustur` → `Oluştur`, `Katiliyorum` → `Katılıyorum`
+- `Sehir` → `Şehir`, `Duzenleyen` → `Düzenleyen`, `Katilim` → `Katılım`
+- `Arkadaslar` → `Arkadaşlar`, `Henuz` → `Henüz`, `Aciklama` → `Açıklama`
+- `Lutfen once sehir secin` → `Lütfen önce şehir seçin`
+- `Etkinligine` → `Etkinliğine`, `goz at` → `göz at`
+- EventDetail, Events, Feed sayfaları dahil tüm JSX metinleri kontrol edildi.
+
+### 10. Mesajlaşma
+- **FloatingChat.jsx:** `/mesajlar` sayfasında FloatingChat render edilmez.
+- **Messages.jsx:** Mobil yükseklik `h-[calc(100dvh-160px)]` ile düzeltildi.
 - **DM:** Yalnızca arkadaşlar arası. Realtime ile anlık.
 - **Etkinlik Sohbet Odaları:** Her etkinlikte canlı sohbet.
 
-### 8. Aile ve Medeni Durum
-- **Profil Girişi:** `Profile.jsx` sayfasında "Medeni Durum" (Evli, Bekar, İlişkisi Var) ve "Çocuk Sayısı" alanları düzenlenebilir ve görüntülenebilir.
-- **Üye Keşfetme Filtreleri:** `Members.jsx` sayfasına medeni durum ve çocuk sahibi (ebeveyn) olma durumuna göre arama/filtreleme seçenekleri eklendi. Üye kartlarında aile durumları gösterilir.
+### 11. Aile ve Medeni Durum
+- **Profil Girişi:** Medeni Durum (Evli, Bekar, İlişkisi Var) ve Çocuk Sayısı alanları.
+- **Üye Keşfetme Filtreleri:** Medeni durum ve ebeveyn durumuna göre filtreleme. Üye kartlarında aile durumları gösterilir.
+
+### 12. PWA ve Teknik
+- **PWA Desteği:** Manifest, service worker, iOS/Android özel yükleme akışları (`PWAInstallPrompt.jsx`).
+- **iOS Safari Zoom Fix:** `maximum-scale=1.0` viewport meta.
+- **Mobil Bottom Nav / Desktop Top Nav** navigasyon.
 
 ## Supabase DB Notları
 - `profiles` tablosu: `id, username, full_name, avatar_url, is_admin, status, city, occupation, hobbies, interests, age, gender, email, marital_status, children_count`
@@ -75,50 +121,51 @@
 - Tablolar: `friendships`, `direct_messages`, `event_messages`, `rsvps`, `comments`, `channels`, `posts`, `events`, `profiles`
 - RLS: `security definer` fonksiyonları (`get_is_admin()`, `get_is_approved()`)
 - Auth trigger `handle_new_user()`: yeni kayıtta `profiles`'a email de kaydedilir.
-- **Otomatik Bildirim Tetikleyicileri:** `send_notification_webhook` fonksiyonu aracılığıyla `send-notification` Edge Function tetiklenir:
-  - **Yeni Kayıt (pending):** Yeni üye kaydolduğunda *"Başvurunuz Değerlendiriliyor"* maili gider.
-  - **Üyelik Onayı (approved):** Üyelik onaylandığında *"Üyeliğiniz Onaylandı"* maili gider.
-  - **Etkinlik Güncellemesi:** Katılacağını belirten üyelere ( RSVP = `going`) etkinlik detayları değiştiğinde mail gider.
-  - **Yeni Yorum:** Bir gönderiye yorum yazıldığında gönderi sahibine bildirim gider.
-  - **Yorum Yanıtı:** Bir yoruma yanıt yazıldığında asıl yorum sahibine bildirim gider.
-- **Güvenli Üye Silme (RPC):** `public.delete_user` fonksiyonu ile bir üye silindiğinde hem `auth.users` kaydı hem de buna bağlı tüm veriler (profiles, posts, friendships, messages vb.) cascade olarak tamamen silinir.
+- **Otomatik Bildirim Tetikleyicileri:** `send_notification_webhook` fonksiyonu → `send-notification` Edge Function:
+  - Yeni Kayıt (pending), Üyelik Onayı, Etkinlik Güncellemesi, Yeni Yorum, Yorum Yanıtı
+- **Güvenli Üye Silme (RPC):** `public.delete_user` fonksiyonu cascade siler.
 
 ## Supabase Edge Functions
-- `send-notification`: Deno/TypeScript ile yazılmış, **Resend API** (veya Brevo) kullanan entegre e-posta bildirim fonksiyonu. Veritabanı tetikleyicilerinden gelen istekleri doğrulamak için `x-notification-secret` güvenlik başlığını kullanır.
-- `send-approval-email` (Eski): Sadece onay maili gönderen eski Brevo Deno fonksiyonu.
+- `send-notification`: Deno/TypeScript, Resend API ile e-posta bildirimleri. `x-notification-secret` güvenlik başlığı ile doğrulama.
+- `send-approval-email` (Eski): Brevo ile onay maili.
 
 ## Proje Yapısı
 ```
 src/
   pages/
-    Feed.jsx          — Ana sayfa, gönderi akışı
-    Channels.jsx      — Kanallar sekmeli listesi (Genel / Şehir)
+    Feed.jsx          — Ana sayfa; Paylaş butonu → Gönderi/Etkinlik seçici dropdown
+    Channels.jsx      — Konu listesi; Yeni Konu modali max-h-[80vh] overflow-y-auto pb-20 md:pb-5
     ChannelDetail.jsx — Kanal gönderileri, şehir filtresi, admin düzenleme
-    Events.jsx        — Etkinlik listesi + oluşturma (datetime-local)
-    EventDetail.jsx   — Etkinlik detayları, RSVP, sohbet
-    PostDetail.jsx    — Gönderi detayları, yorumlar ve paylaşım
-    Admin.jsx         — Kullanıcı yönetimi (silme işlemi güvenli RPC'ye bağlandı)
+    Events.jsx        — Etkinlik listesi + oluşturma; ?create=true ile modal otomatik açılır
+    EventDetail.jsx   — Etkinlik detayları, RSVP (sadece Katılıyorum), davet modali, yorumlar
+    Admin.jsx         — Kullanıcı yönetimi (güvenli RPC silme)
     Friends.jsx       — Arkadaşlık yönetimi
-    Members.jsx       — Üye arama (Medeni durum ve Çocuk filtreleri eklendi)
+    Members.jsx       — Üye arama (Medeni durum ve Çocuk filtreleri)
     Messages.jsx      — DM merkezi (mobil uyumlu)
-    Profile.jsx       — Profil düzenleme (Medeni durum ve Çocuk bilgileri eklendi)
+    Profile.jsx       — Profil düzenleme
     Login.jsx         — Giriş
     Register.jsx      — Kayıt (şehir, meslek, autocomplete)
-    Pending.jsx       — Onay bekleyen ekran (çıkış yapınca otomatik /giris yönlendirmesi)
+    Pending.jsx       — Onay bekleyen ekran
+    Cities.jsx        — Şehir listesi
+    CityDetail.jsx    — Şehir detay sayfası
   components/
-    PostCard.jsx        — Gönderi kartı (yorum sayısı, şehir badge, spacing)
+    PostCard.jsx        — Gönderi kartı (açıklama/body kartlarda gösterilmez)
     CreatePostModal.jsx — Gönderi oluşturma (isteğe bağlı şehir)
     LocationInput.jsx   — Konum otomatik tamamlama + onCityChange prop
-    EventMap.jsx        — Etkinlik haritası (gün+ay marker, inline popup stili)
-    MemberMap.jsx       — Üye haritası (boş state mesajı)
-    AutocompleteInput.jsx — Şehir/meslek dropdown (sadece yazarken göster)
-    FloatingChat.jsx    — Yüzen sohbet (hook violation düzeltildi)
+    EventMap.jsx        — Etkinlik haritası
+    MemberMap.jsx       — Üye haritası
+    AutocompleteInput.jsx — Şehir/meslek dropdown
+    FloatingChat.jsx    — Yüzen sohbet (/mesajlar sayfasında gizlenir)
+    EventChat.jsx       — Etkinlik canlı sohbet
+    UserProfileModal.jsx — Kullanıcı profil popup modalı
     Layout.jsx          — Sarmal: mobil header, realtime DM dinleyici
-    PWAInstallPrompt.jsx — PWA yükleme yönlendirmesi (iOS/Android destekli)
+    PWAInstallPrompt.jsx — PWA yükleme yönlendirmesi
     TopNav.jsx          — Masaüstü navigasyon
     BottomNav.jsx       — Mobil alt navigasyon
   contexts/
     AuthContext.jsx   — Oturum ve profil
+    ThemeContext.jsx  — Tema yönetimi (Light/Dark mode, localStorage)
   lib/
     supabase.js       — Supabase istemci
+  index.css           — CSS değişkenleri (--r-* light/dark), Tailwind base
 ```

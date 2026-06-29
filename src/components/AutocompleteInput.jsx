@@ -33,6 +33,7 @@ export default function AutocompleteInput({
   placeholder = '', 
   label = '', 
   required = false,
+  disabled = false,
   className = ''
 }) {
   const [filtered, setFiltered] = useState([])
@@ -50,6 +51,7 @@ export default function AutocompleteInput({
   }, [])
 
   const handleInputChange = (e) => {
+    if (disabled) return
     const val = e.target.value
     onChange(val)
 
@@ -67,6 +69,7 @@ export default function AutocompleteInput({
   }
 
   const handleFocus = () => {
+    if (disabled) return
     if (value && value.trim().length > 0) {
       const query = value.toLocaleLowerCase('tr-TR')
       const filteredList = suggestions.filter(item =>
@@ -85,7 +88,7 @@ export default function AutocompleteInput({
   return (
     <div ref={containerRef} className="relative w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-[var(--r-text)] mb-1">
           {label}
         </label>
       )}
@@ -95,17 +98,18 @@ export default function AutocompleteInput({
         onChange={handleInputChange}
         onFocus={handleFocus}
         required={required}
+        disabled={disabled}
         placeholder={placeholder}
-        className={className || "w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"}
+        className={className || "w-full px-4 py-2.5 border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"}
       />
       {showDropdown && filtered.length > 0 && (
-        <div className="absolute z-[100] left-0 right-0 mt-1 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute z-[100] left-0 right-0 mt-1 bg-[var(--r-card)] border border-[var(--r-border)] rounded-2xl shadow-xl max-h-48 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-150">
           {filtered.map((item, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => handleSelect(item)}
-              className="w-full px-4 py-2.5 text-left text-sm hover:bg-primary-50 hover:text-primary-700 transition-colors border-b border-gray-50 last:border-0"
+              className="w-full px-4 py-2.5 text-left text-sm text-[var(--r-text)] hover:bg-primary-500/10 hover:text-primary-600 transition-colors border-b border-[var(--r-border)] last:border-0"
             >
               {item}
             </button>

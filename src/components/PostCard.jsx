@@ -43,7 +43,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
     setLoadingComments(true)
     const { data } = await supabase
       .from('comments')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(full_name, username)')
       .eq('post_id', post.id)
       .order('created_at', { ascending: true })
     setComments(data || [])
@@ -59,7 +59,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
     const { data } = await supabase
       .from('comments')
       .insert({ post_id: post.id, author_id: profile.id, body: text, parent_id: parentId })
-      .select('*, profiles(full_name)')
+      .select('*, profiles(full_name, username)')
       .single()
     if (parentId) {
       setActiveReplyId(null)
@@ -84,60 +84,64 @@ export default function PostCard({ post, onDelete, onEdit }) {
   const getRepliesFor = (parentId) => comments.filter(c => c.parent_id === parentId)
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm overflow-hidden hover:bg-[var(--r-hover)] transition-colors duration-150">
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               {post.channels && (
-                <span className="text-[10px] bg-primary-50 text-primary-700 border border-primary-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                <span className="text-[10px] bg-primary-500/10 text-primary-600 border border-primary-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                   {post.channels.name.toLocaleUpperCase('tr-TR')}
                 </span>
               )}
               {post.city && (
-                <span className="text-[10px] bg-gray-50 text-gray-600 border border-gray-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                <span className="text-[10px] bg-[var(--r-bg)] text-[var(--r-meta)] border border-[var(--r-border)] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                   📍 {post.city}
                 </span>
               )}
-              <span className="text-xs text-gray-400">{timeAgo(post.created_at)}</span>
+              <span className="text-xs text-[var(--r-meta)]">{timeAgo(post.created_at)}</span>
             </div>
             {editMode ? (
               <div className="space-y-2 mt-2">
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-lg px-3 py-2 text-sm"
                   value={editTitle}
                   onChange={e => setEditTitle(e.target.value)}
                 />
                 <textarea
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-lg px-3 py-2 text-sm resize-none"
                   rows={3}
                   value={editBody}
                   onChange={e => setEditBody(e.target.value)}
                 />
                 <div className="flex gap-2">
                   <button onClick={saveEdit} className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg">Kaydet</button>
-                  <button onClick={() => setEditMode(false)} className="text-xs text-gray-500 px-3 py-1.5 rounded-lg border">İptal</button>
+                  <button onClick={() => setEditMode(false)} className="text-xs text-[var(--r-meta)] px-3 py-1.5 rounded-lg border border-[var(--r-border)]">İptal</button>
                 </div>
               </div>
             ) : (
               <>
-                <h3 className="font-semibold text-gray-900 text-sm">{post.title}</h3>
-                <p className="text-gray-600 text-sm mt-1 leading-relaxed">{post.body}</p>
-                <p className="text-xs text-gray-400 mt-2">{post.profiles?.full_name}</p>
+                <h3 className="font-semibold text-[var(--r-text)] text-sm">{post.title}</h3>
+                <button 
+                  onClick={() => window.showUserProfile && window.showUserProfile(post.author_id)}
+                  className="text-xs text-primary-600 hover:underline font-semibold mt-2 text-left block"
+                >
+                  @{post.profiles?.username}
+                </button>
               </>
             )}
           </div>
           {(canEdit || canDelete) && !editMode && (
             <div className="flex gap-1 shrink-0">
               {canEdit && (
-                <button onClick={() => setEditMode(true)} className="p-1.5 text-gray-400 hover:text-primary-600 rounded-lg hover:bg-gray-50">
+                <button onClick={() => setEditMode(true)} className="p-1.5 text-[var(--r-meta)] hover:text-primary-600 rounded-lg hover:bg-[var(--r-hover)]">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </button>
               )}
               {canDelete && (
-                <button onClick={() => onDelete(post.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-50">
+                <button onClick={() => onDelete(post.id)} className="p-1.5 text-[var(--r-meta)] hover:text-red-500 rounded-lg hover:bg-[var(--r-hover)]">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
@@ -148,23 +152,23 @@ export default function PostCard({ post, onDelete, onEdit }) {
         </div>
       </div>
 
-      <div className="border-t border-gray-50 px-4 py-2 flex items-center justify-between">
+      <div className="border-t border-[var(--r-border)] px-4 py-2 flex items-center justify-between">
         <button
           onClick={loadComments}
-          className="text-xs text-gray-500 hover:text-primary-600 font-medium"
+          className="text-xs text-[var(--r-meta)] hover:text-primary-600 font-medium"
         >
           {loadingComments ? 'Yükleniyor...' : showComments ? `Yorumları Gizle (${comments.length})` : commentsLoaded ? `Yorumlar (${comments.length})` : 'Yorumlar'}
         </button>
         <button
           onClick={handleShare}
-          className="text-xs text-gray-500 hover:text-primary-600 font-medium flex items-center gap-1.5 relative"
+          className="text-xs text-[var(--r-meta)] hover:text-primary-600 font-medium flex items-center gap-1.5 relative"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 10.742l4.636-2.318m0 0a3 3 0 102.686-2.686 3 3 0 00-2.686 2.686zm-4.636 2.318a3 3 0 10-2.686 2.686 3 3 0 002.686-2.686zm4.636 2.318l-4.636-2.318a3 3 0 11-2.686-2.686 3 3 0 012.686 2.686z" />
           </svg>
           Paylaş
           {copied && (
-            <span className="absolute -top-8 right-0 bg-gray-900 text-white text-[9px] px-1.5 py-0.5 rounded shadow-md whitespace-nowrap z-10">
+            <span className="absolute -top-8 right-0 bg-[var(--r-text)] text-[var(--r-card)] text-[9px] px-1.5 py-0.5 rounded shadow-md whitespace-nowrap z-10">
               Kopyalandı!
             </span>
           )}
@@ -172,8 +176,8 @@ export default function PostCard({ post, onDelete, onEdit }) {
       </div>
 
       {showComments && (
-        <div className="border-t border-gray-50 bg-gray-50 px-4 py-3 space-y-3">
-          {rootComments.length === 0 && <p className="text-xs text-gray-400">Henüz yorum yok.</p>}
+        <div className="border-t border-[var(--r-border)] bg-[var(--r-bg)] px-4 py-3 space-y-3">
+          {rootComments.length === 0 && <p className="text-xs text-[var(--r-meta)]">Henüz yorum yok.</p>}
           
           <div className="space-y-4">
             {rootComments.map(c => {
@@ -182,17 +186,22 @@ export default function PostCard({ post, onDelete, onEdit }) {
                 <div key={c.id} className="space-y-3">
                   {/* Ana Yorum */}
                   <div className="flex gap-2 items-start">
-                    <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-primary-700">{c.profiles?.full_name?.[0]?.toUpperCase()}</span>
+                    <div className="w-7 h-7 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-primary-600">{c.profiles?.full_name?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-medium text-gray-700">{c.profiles?.full_name}</span>
-                        <span className="text-[10px] text-gray-400">
+                        <button
+                          onClick={() => window.showUserProfile && window.showUserProfile(c.author_id)}
+                          className="text-xs font-semibold text-primary-600 hover:underline"
+                        >
+                          @{c.profiles?.username}
+                        </button>
+                        <span className="text-[10px] text-[var(--r-meta)]">
                           {new Date(c.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 mt-0.5">{c.body}</p>
+                      <p className="text-xs text-[var(--r-meta)] mt-0.5">{c.body}</p>
                       
                       {/* Yanıtla Butonu */}
                       <button 
@@ -211,33 +220,38 @@ export default function PostCard({ post, onDelete, onEdit }) {
                       </button>
                     </div>
                     {(profile?.is_admin || profile?.id === c.author_id) && (
-                      <button onClick={() => deleteComment(c.id)} className="text-gray-300 hover:text-red-400 shrink-0">
+                      <button onClick={() => deleteComment(c.id)} className="text-[var(--r-meta)] hover:text-red-400 shrink-0">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     )}
                   </div>
-
+ 
                   {/* Yanıtları Listeleme */}
                   {replies.length > 0 && (
-                    <div className="pl-6 border-l-2 border-gray-200/60 ml-3.5 space-y-3 mt-2">
+                    <div className="pl-6 border-l-2 border-[var(--r-border)] ml-3.5 space-y-3 mt-2">
                       {replies.map(reply => (
                         <div key={reply.id} className="flex gap-2 items-start">
-                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-                            <span className="text-[10px] font-bold text-gray-600">{reply.profiles?.full_name?.[0]?.toUpperCase()}</span>
+                          <div className="w-6 h-6 rounded-full bg-[var(--r-border)] flex items-center justify-center shrink-0">
+                            <span className="text-[10px] font-bold text-[var(--r-meta)]">{reply.profiles?.username?.[0]?.toUpperCase()}</span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-medium text-gray-700">{reply.profiles?.full_name}</span>
-                              <span className="text-[10px] text-gray-400">
+                              <button
+                                onClick={() => window.showUserProfile && window.showUserProfile(reply.author_id)}
+                                className="text-xs font-semibold text-primary-600 hover:underline"
+                              >
+                                @{reply.profiles?.username}
+                              </button>
+                              <span className="text-[10px] text-[var(--r-meta)]">
                                 {new Date(reply.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-600 mt-0.5">{reply.body}</p>
+                            <p className="text-xs text-[var(--r-meta)] mt-0.5">{reply.body}</p>
                           </div>
                           {(profile?.is_admin || profile?.id === reply.author_id) && (
-                            <button onClick={() => deleteComment(reply.id)} className="text-gray-300 hover:text-red-400 shrink-0">
+                            <button onClick={() => deleteComment(reply.id)} className="text-[var(--r-meta)] hover:text-red-400 shrink-0">
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                               </svg>
@@ -253,7 +267,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
                     <form onSubmit={(e) => submitComment(e, c.id)} className="flex gap-2 pl-6 ml-3.5 mt-2">
                       <input
                         required
-                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        className="flex-1 text-xs border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
                         placeholder="Cevap yaz..."
                         value={replyText}
                         onChange={e => setReplyText(e.target.value)}
@@ -274,7 +288,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
           <form onSubmit={(e) => submitComment(e)} className="flex gap-2 mt-2">
             <input
               required
-              className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="flex-1 text-xs border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500"
               placeholder="Yorum yaz..."
               value={commentText}
               onChange={e => setCommentText(e.target.value)}

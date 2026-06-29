@@ -138,10 +138,10 @@ export default function Profile() {
 
   return (
     <div className="pb-8">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Profil</h1>
+      <h1 className="text-xl font-bold text-[var(--r-text)] mb-4">Profil</h1>
 
       {showWelcome && (
-        <div className="bg-primary-50 border border-primary-200 rounded-2xl p-4 mb-4 relative">
+        <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4 mb-4 relative">
           <button
             onClick={() => {
               setShowWelcome(false)
@@ -149,54 +149,54 @@ export default function Profile() {
                 localStorage.setItem(`profile_welcome_banner_closed_${profile.id}`, 'true')
               }
             }}
-            className="absolute top-3 right-3 text-primary-400 hover:text-primary-600 transition-colors"
+            className="absolute top-3 right-3 text-primary-500 hover:text-primary-600 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <p className="text-sm font-semibold text-primary-800">🎉 Üyeliğiniz onaylandı, hoş geldiniz!</p>
-          <p className="text-xs text-primary-600 mt-1">Diğer üyeler sizi daha iyi tanısın diye profilinizi doldurun — şehir, meslek, ilgi alanlarınızı ekleyin.</p>
+          <p className="text-sm font-semibold text-primary-600">🎉 Üyeliğiniz onaylandı, hoş geldiniz!</p>
+          <p className="text-xs text-primary-500 mt-1">Diğer üyeler sizi daha iyi tanısın diye profilinizi doldurun — şehir, meslek, ilgi alanlarınızı ekleyin.</p>
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-5">
         <div className="flex items-center gap-4 mb-5">
-          <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-            <span className="text-2xl font-bold text-primary-700">{profile?.full_name?.[0]?.toUpperCase()}</span>
+          <div className="w-16 h-16 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0">
+            <span className="text-2xl font-bold text-primary-600">{profile?.full_name?.[0]?.toUpperCase()}</span>
           </div>
           <div>
-            <h2 className="font-bold text-gray-900">{profile?.full_name}</h2>
-            <p className="text-sm text-gray-500">@{profile?.username}</p>
+            <h2 className="font-bold text-[var(--r-text)]">{profile?.full_name}</h2>
+            <p className="text-sm text-[var(--r-meta)]">@{profile?.username}</p>
             {profile?.is_admin && (
-              <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-medium mt-1 inline-block">Yönetici</span>
+              <span className="text-xs bg-primary-500/10 text-primary-600 px-2 py-0.5 rounded-full font-medium mt-1 inline-block">Yönetici</span>
             )}
           </div>
         </div>
 
         {saved && (
-          <div className="bg-green-50 text-green-700 text-sm px-4 py-2 rounded-lg mb-4">Profil güncellendi!</div>
+          <div className="bg-green-500/10 text-green-600 text-sm px-4 py-2 rounded-lg mb-4">Profil güncellendi!</div>
         )}
 
         {editMode ? (
           <form onSubmit={handleSave} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Ad Soyad</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Ad Soyad</label>
                 <input
                   required
                   value={form.full_name}
                   onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Kullanıcı Adı</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Kullanıcı Adı</label>
                 <input
                   required
                   value={form.username}
                   onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -222,21 +222,21 @@ export default function Profile() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Yaş</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Yaş</label>
                 <input
                   type="number"
                   value={form.age}
                   onChange={e => setForm(f => ({ ...f, age: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Örn: 28"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Cinsiyet</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Cinsiyet</label>
                 <select
                   value={form.gender}
                   onChange={e => setForm(f => ({ ...f, gender: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Belirtilmemiş</option>
                   <option value="Erkek">Erkek</option>
@@ -248,11 +248,11 @@ export default function Profile() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Medeni Durum</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Medeni Durum</label>
                 <select
                   value={form.marital_status}
                   onChange={e => setForm(f => ({ ...f, marital_status: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Belirtilmemiş</option>
                   <option value="Evli">Evli</option>
@@ -261,30 +261,30 @@ export default function Profile() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Çocuk Sayısı</label>
+                <label className="text-xs font-medium text-[var(--r-text)] mb-1 block">Çocuk Sayısı</label>
                 <input
                   type="number"
                   min="0"
                   value={form.children_count}
                   onChange={e => setForm(f => ({ ...f, children_count: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Örn: 0 veya boş bırakın"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-700 block">Hobiler</label>
+              <label className="text-xs font-medium text-[var(--r-text)] block">Hobiler</label>
               
               {/* Selected Hobbies */}
               <div className="flex flex-wrap gap-1.5 py-1">
                 {selectedHobbies.map(hobby => (
-                  <span key={hobby} className="inline-flex items-center gap-1 bg-primary-50 text-primary-700 border border-primary-100 px-2.5 py-1 rounded-full text-xs font-medium">
+                  <span key={hobby} className="inline-flex items-center gap-1 bg-primary-500/10 text-primary-600 border border-primary-500/20 px-2.5 py-1 rounded-full text-xs font-medium">
                     {hobby}
                     <button 
                       type="button" 
                       onClick={() => toggleHobby(hobby)} 
-                      className="hover:text-primary-900 focus:outline-none ml-0.5"
+                      className="hover:text-primary-700 focus:outline-none ml-0.5"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -293,7 +293,7 @@ export default function Profile() {
                   </span>
                 ))}
                 {selectedHobbies.length === 0 && (
-                  <span className="text-xs text-gray-400 italic">Henüz hobi seçilmedi.</span>
+                  <span className="text-xs text-[var(--r-meta)] italic">Henüz hobi seçilmedi.</span>
                 )}
               </div>
 
@@ -310,7 +310,7 @@ export default function Profile() {
                       addCustomHobby();
                     }
                   }}
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="flex-1 border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 <button
                   type="button"
@@ -323,14 +323,14 @@ export default function Profile() {
 
               {/* Suggestions */}
               <div className="mt-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">Önerilen Hobiler</span>
-                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1.5 bg-gray-50/50 rounded-xl border border-gray-100">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--r-meta)] block mb-1">Önerilen Hobiler</span>
+                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1.5 bg-[var(--r-bg)] rounded-xl border border-[var(--r-border)]">
                   {PREDEFINED_HOBBIES.filter(h => !selectedHobbies.includes(h)).map(hobby => (
                     <button
                       key={hobby}
                       type="button"
                       onClick={() => toggleHobby(hobby)}
-                      className="text-[11px] bg-white hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 border border-gray-200 text-gray-600 px-2 py-0.5 rounded-full transition-colors font-medium"
+                      className="text-[11px] bg-[var(--r-card)] hover:bg-primary-500/10 hover:text-primary-600 hover:border-primary-500/20 border border-[var(--r-border)] text-[var(--r-meta)] px-2 py-0.5 rounded-full transition-colors font-medium"
                     >
                       + {hobby}
                     </button>
@@ -340,17 +340,17 @@ export default function Profile() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-700 block">İlgi Alanları</label>
-              
+              <label className="text-xs font-medium text-[var(--r-text)] block">İlgi Alanları</label>
+
               {/* Selected Interests */}
               <div className="flex flex-wrap gap-1.5 py-1">
                 {selectedInterests.map(interest => (
-                  <span key={interest} className="inline-flex items-center gap-1 bg-primary-50 text-primary-700 border border-primary-100 px-2.5 py-1 rounded-full text-xs font-medium">
+                  <span key={interest} className="inline-flex items-center gap-1 bg-primary-500/10 text-primary-600 border border-primary-500/20 px-2.5 py-1 rounded-full text-xs font-medium">
                     {interest}
-                    <button 
-                      type="button" 
-                      onClick={() => toggleInterest(interest)} 
-                      className="hover:text-primary-900 focus:outline-none ml-0.5"
+                    <button
+                      type="button"
+                      onClick={() => toggleInterest(interest)}
+                      className="hover:text-primary-700 focus:outline-none ml-0.5"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -359,7 +359,7 @@ export default function Profile() {
                   </span>
                 ))}
                 {selectedInterests.length === 0 && (
-                  <span className="text-xs text-gray-400 italic">Henüz ilgi alanı seçilmedi.</span>
+                  <span className="text-xs text-[var(--r-meta)] italic">Henüz ilgi alanı seçilmedi.</span>
                 )}
               </div>
 
@@ -376,7 +376,7 @@ export default function Profile() {
                       addCustomInterest();
                     }
                   }}
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="flex-1 border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 <button
                   type="button"
@@ -389,14 +389,14 @@ export default function Profile() {
 
               {/* Suggestions */}
               <div className="mt-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">Önerilen İlgi Alanları</span>
-                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1.5 bg-gray-50/50 rounded-xl border border-gray-100">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--r-meta)] block mb-1">Önerilen İlgi Alanları</span>
+                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1.5 bg-[var(--r-bg)] rounded-xl border border-[var(--r-border)]">
                   {PREDEFINED_INTERESTS.filter(i => !selectedInterests.includes(i)).map(interest => (
                     <button
                       key={interest}
                       type="button"
                       onClick={() => toggleInterest(interest)}
-                      className="text-[11px] bg-white hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 border border-gray-200 text-gray-600 px-2 py-0.5 rounded-full transition-colors font-medium"
+                      className="text-[11px] bg-[var(--r-card)] hover:bg-primary-500/10 hover:text-primary-600 hover:border-primary-500/20 border border-[var(--r-border)] text-[var(--r-meta)] px-2 py-0.5 rounded-full transition-colors font-medium"
                     >
                       + {interest}
                     </button>
@@ -409,65 +409,65 @@ export default function Profile() {
               <button type="submit" disabled={saving} className="flex-1 bg-primary-600 text-white py-2.5 rounded-xl text-sm font-medium disabled:opacity-60">
                 {saving ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
-              <button type="button" onClick={() => setEditMode(false)} className="px-4 py-2.5 border rounded-xl text-sm text-gray-600">İptal</button>
+              <button type="button" onClick={() => setEditMode(false)} className="px-4 py-2.5 border rounded-xl text-sm text-[var(--r-meta)]">İptal</button>
             </div>
           </form>
         ) : (
           <div className="space-y-4">
-            <div className="border-t border-gray-100 pt-4 space-y-3.5 text-sm">
-              <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
-                <span className="text-gray-400 font-medium">📍 Yaşadığı Şehir</span>
-                <span className="text-gray-900 font-semibold">{profile?.city || '-'}</span>
+            <div className="border-t border-[var(--r-border)] pt-4 space-y-3.5 text-sm">
+              <div className="flex justify-between items-center py-1 border-b border-[var(--r-border)] last:border-0">
+                <span className="text-[var(--r-meta)] font-medium">📍 Yaşadığı Şehir</span>
+                <span className="text-[var(--r-text)] font-semibold">{profile?.city || '-'}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
-                <span className="text-gray-400 font-medium">💼 Meslek</span>
-                <span className="text-gray-900 font-semibold">{profile?.occupation || '-'}</span>
+              <div className="flex justify-between items-center py-1 border-b border-[var(--r-border)] last:border-0">
+                <span className="text-[var(--r-meta)] font-medium">💼 Meslek</span>
+                <span className="text-[var(--r-text)] font-semibold">{profile?.occupation || '-'}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
-                <span className="text-gray-400 font-medium">🎂 Yaş</span>
-                <span className="text-gray-900 font-semibold">{profile?.age || '-'}</span>
+              <div className="flex justify-between items-center py-1 border-b border-[var(--r-border)] last:border-0">
+                <span className="text-[var(--r-meta)] font-medium">🎂 Yaş</span>
+                <span className="text-[var(--r-text)] font-semibold">{profile?.age || '-'}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
-                <span className="text-gray-400 font-medium">⚧ Cinsiyet</span>
-                <span className="text-gray-900 font-semibold">{profile?.gender || '-'}</span>
+              <div className="flex justify-between items-center py-1 border-b border-[var(--r-border)] last:border-0">
+                <span className="text-[var(--r-meta)] font-medium">⚧ Cinsiyet</span>
+                <span className="text-[var(--r-text)] font-semibold">{profile?.gender || '-'}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
-                <span className="text-gray-400 font-medium">💍 Medeni Durum</span>
-                <span className="text-gray-900 font-semibold">{profile?.marital_status || '-'}</span>
+              <div className="flex justify-between items-center py-1 border-b border-[var(--r-border)] last:border-0">
+                <span className="text-[var(--r-meta)] font-medium">💍 Medeni Durum</span>
+                <span className="text-[var(--r-text)] font-semibold">{profile?.marital_status || '-'}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
-                <span className="text-gray-400 font-medium">👶 Çocuk Sayısı</span>
-                <span className="text-gray-900 font-semibold">
+              <div className="flex justify-between items-center py-1 border-b border-[var(--r-border)] last:border-0">
+                <span className="text-[var(--r-meta)] font-medium">👶 Çocuk Sayısı</span>
+                <span className="text-[var(--r-text)] font-semibold">
                   {profile?.children_count !== undefined && profile?.children_count !== null
                     ? (profile.children_count === 0 ? 'Yok' : `${profile.children_count} Çocuk`)
                     : '-'}
                 </span>
               </div>
-              <div className="border-b border-gray-50 pb-3.5">
-                <span className="text-gray-400 font-medium block mb-2">🎨 Hobiler</span>
+              <div className="border-b border-[var(--r-border)] pb-3.5">
+                <span className="text-[var(--r-meta)] font-medium block mb-2">🎨 Hobiler</span>
                 <div className="flex flex-wrap gap-1.5">
                   {profile?.hobbies ? (
                     profile.hobbies.split(',').map(s => s.trim()).filter(Boolean).map((hobby, i) => (
-                      <span key={i} className="bg-primary-50 text-primary-700 border border-primary-100/60 px-2.5 py-1 rounded-full text-xs font-medium">
+                      <span key={i} className="bg-primary-500/10 text-primary-600 border border-primary-500/20 px-2.5 py-1 rounded-full text-xs font-medium">
                         {hobby}
                       </span>
                     ))
                   ) : (
-                    <span className="text-gray-400 text-xs italic">Hobi eklenmemiş.</span>
+                    <span className="text-[var(--r-meta)] text-xs italic">Hobi eklenmemiş.</span>
                   )}
                 </div>
               </div>
-              <div className="border-b border-gray-50 pb-3.5 last:border-b-0">
-                <span className="text-gray-400 font-medium block mb-2">🎯 İlgi Alanları</span>
+              <div className="border-b border-[var(--r-border)] pb-3.5 last:border-b-0">
+                <span className="text-[var(--r-meta)] font-medium block mb-2">🎯 İlgi Alanları</span>
                 <div className="flex flex-wrap gap-1.5">
                   {profile?.interests ? (
                     profile.interests.split(',').map(s => s.trim()).filter(Boolean).map((interest, i) => (
-                      <span key={i} className="bg-primary-50 text-primary-700 border border-primary-100/60 px-2.5 py-1 rounded-full text-xs font-medium">
+                      <span key={i} className="bg-primary-500/10 text-primary-600 border border-primary-500/20 px-2.5 py-1 rounded-full text-xs font-medium">
                         {interest}
                       </span>
                     ))
                   ) : (
-                    <span className="text-gray-400 text-xs italic">İlgi alanı eklenmemiş.</span>
+                    <span className="text-[var(--r-meta)] text-xs italic">İlgi alanı eklenmemiş.</span>
                   )}
                 </div>
               </div>
@@ -475,7 +475,7 @@ export default function Profile() {
 
             <button
               onClick={() => setEditMode(true)}
-              className="w-full border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+              className="w-full border border-[var(--r-border)] text-[var(--r-text)] py-2.5 rounded-xl text-sm font-medium hover:bg-[var(--r-hover)] transition-colors"
             >
               Profili Düzenle
             </button>
@@ -485,15 +485,15 @@ export default function Profile() {
 
       <Link
         to="/arkadaslar"
-        className="mt-3 flex items-center justify-between bg-primary-50 rounded-2xl border border-primary-100 p-4"
+        className="mt-3 flex items-center justify-between bg-primary-500/10 rounded-2xl border border-primary-500/20 p-4"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-            <svg className="w-5 h-5 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 bg-primary-500/[0.15] rounded-xl flex items-center justify-center">
+            <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <span className="text-sm font-medium text-primary-700">Arkadaşlarım</span>
+          <span className="text-sm font-medium text-primary-600">Arkadaşlarım</span>
         </div>
         <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -502,15 +502,15 @@ export default function Profile() {
 
       <Link
         to="/mesajlar"
-        className="mt-3 flex items-center justify-between bg-primary-50 rounded-2xl border border-primary-100 p-4"
+        className="mt-3 flex items-center justify-between bg-primary-500/10 rounded-2xl border border-primary-500/20 p-4"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-            <svg className="w-5 h-5 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 bg-primary-500/[0.15] rounded-xl flex items-center justify-center">
+            <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
-          <span className="text-sm font-medium text-primary-700">Mesajlarım</span>
+          <span className="text-sm font-medium text-primary-600">Mesajlarım</span>
         </div>
         <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -520,15 +520,15 @@ export default function Profile() {
       {profile?.is_admin && (
         <Link
           to="/admin"
-          className="mt-3 flex items-center justify-between bg-primary-50 rounded-2xl border border-primary-100 p-4"
+          className="mt-3 flex items-center justify-between bg-primary-500/10 rounded-2xl border border-primary-500/20 p-4"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-              <svg className="w-5 h-5 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 bg-primary-500/[0.15] rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
               </svg>
             </div>
-            <span className="text-sm font-medium text-primary-700">Yönetim Paneli</span>
+            <span className="text-sm font-medium text-primary-600">Yönetim Paneli</span>
           </div>
           <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -538,7 +538,7 @@ export default function Profile() {
 
       <button
         onClick={signOut}
-        className="mt-3 w-full bg-white border border-gray-200 text-red-500 py-3 rounded-2xl text-sm font-medium hover:bg-red-50 transition-colors"
+        className="mt-3 w-full bg-[var(--r-card)] border border-[var(--r-border)] text-red-500 py-3 rounded-2xl text-sm font-medium hover:bg-red-500/10 transition-colors"
       >
         Çıkış Yap
       </button>

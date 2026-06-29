@@ -2,13 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Reddit Light Mode ── */
+:root {
+  --r-bg:           #FFFFFF;
+  --r-card:         #FFFFFF;
+  --r-nav:          #FFFFFF;
+  --r-border:       #EDEFF1;
+  --r-text:         #1C1C1C;
+  --r-meta:         #878A8C;
+  --r-hover:        #F6F7F8;
+  --r-input:        #F6F7F8;
+  --r-input-border: #EDEFF1;
+}
+
+/* ── Reddit Dark Mode ── */
+html.dark {
+  --r-bg:           #0D0D0E;
+  --r-card:         #1A1A1B;
+  --r-nav:          #1A1A1B;
+  --r-border:       #2D2D2E;
+  --r-text:         #D7DADC;
+  --r-meta:         #818384;
+  --r-hover:        #313135;
+  --r-input:        #1A1A1B;
+  --r-input-border: #2D2D2E;
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-gray-50 text-gray-900;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--r-bg);
+    color: var(--r-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 

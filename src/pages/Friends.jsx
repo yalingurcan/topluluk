@@ -50,7 +50,7 @@ export default function Friends() {
       .update({ status: 'accepted' })
       .eq('sender_id', senderId)
       .eq('receiver_id', profile.id)
-    
+
     setFriendships(f =>
       f.map(x => (x.sender_id === senderId && x.receiver_id === profile.id ? { ...x, status: 'accepted' } : x))
     )
@@ -61,7 +61,7 @@ export default function Friends() {
       .from('friendships')
       .delete()
       .or(`and(sender_id.eq.${profile.id},receiver_id.eq.${memberId}),and(sender_id.eq.${memberId},receiver_id.eq.${profile.id})`)
-    
+
     setFriendships(f =>
       f.filter(
         x =>
@@ -78,14 +78,14 @@ export default function Friends() {
 
   return (
     <div className="pb-8">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Arkadaşlarım</h1>
+      <h1 className="text-xl font-bold text-[var(--r-text)] mb-4">Arkadaşlarım</h1>
 
       {/* Tabs */}
-      <div className="flex bg-gray-100 p-1.5 rounded-2xl mb-4">
+      <div className="flex bg-[var(--r-hover)] p-1.5 rounded-2xl mb-4">
         <button
           onClick={() => setActiveTab('active')}
           className={`flex-1 text-center py-2 text-xs font-semibold rounded-xl transition-all ${
-            activeTab === 'active' ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+            activeTab === 'active' ? 'bg-[var(--r-card)] text-[var(--r-text)] shadow-sm' : 'text-[var(--r-meta)] hover:text-[var(--r-text)]'
           }`}
         >
           Arkadaşlar ({activeFriends.length})
@@ -93,7 +93,7 @@ export default function Friends() {
         <button
           onClick={() => setActiveTab('requests')}
           className={`flex-1 text-center py-2 text-xs font-semibold rounded-xl transition-all relative ${
-            activeTab === 'requests' ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+            activeTab === 'requests' ? 'bg-[var(--r-card)] text-[var(--r-text)] shadow-sm' : 'text-[var(--r-meta)] hover:text-[var(--r-text)]'
           }`}
         >
           İstekler ({incomingRequests.length})
@@ -112,7 +112,7 @@ export default function Friends() {
       ) : activeTab === 'requests' ? (
         <div className="space-y-3">
           {incomingRequests.length === 0 ? (
-            <div className="text-center py-16 text-gray-400 bg-white rounded-2xl border border-gray-100 p-8">
+            <div className="text-center py-16 text-[var(--r-meta)] bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] p-8">
               <p className="text-sm">Gelen arkadaşlık isteği bulunmuyor.</p>
             </div>
           ) : (
@@ -120,14 +120,14 @@ export default function Friends() {
               const senderId = r.sender_id
               const senderProfile = friendProfiles[senderId] || {}
               return (
-                <div key={r.sender_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+                <div key={r.sender_id} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 flex items-center justify-between hover:bg-[var(--r-hover)] transition-colors duration-150">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                      <span className="text-sm font-bold text-primary-700">{senderProfile.full_name?.[0]?.toUpperCase()}</span>
+                    <div className="w-10 h-10 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20">
+                      <span className="text-sm font-bold text-primary-600">{senderProfile.full_name?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-gray-900 text-sm truncate">{senderProfile.full_name}</h3>
-                      <p className="text-[11px] text-gray-500 truncate">📍 {senderProfile.city} | 💼 {senderProfile.occupation}</p>
+                      <h3 className="font-bold text-[var(--r-text)] text-sm truncate">{senderProfile.full_name}</h3>
+                      <p className="text-[11px] text-[var(--r-meta)] truncate">📍 {senderProfile.city} | 💼 {senderProfile.occupation}</p>
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0 ml-3">
@@ -139,7 +139,7 @@ export default function Friends() {
                     </button>
                     <button
                       onClick={() => deleteFriendship(senderId)}
-                      className="bg-gray-100 hover:bg-red-50 hover:text-red-500 text-gray-500 text-xs font-semibold px-3 py-2 rounded-xl transition-colors"
+                      className="bg-[var(--r-hover)] hover:bg-red-500/10 hover:text-red-500 text-[var(--r-meta)] text-xs font-semibold px-3 py-2 rounded-xl transition-colors"
                     >
                       Yoksay
                     </button>
@@ -152,7 +152,7 @@ export default function Friends() {
       ) : (
         <div className="space-y-3">
           {activeFriends.length === 0 ? (
-            <div className="text-center py-16 text-gray-400 bg-white rounded-2xl border border-gray-100 p-8">
+            <div className="text-center py-16 text-[var(--r-meta)] bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] p-8">
               <p className="text-sm">Henüz arkadaşınız bulunmuyor. Üyeler sayfasından arkadaş ekleyebilirsiniz.</p>
             </div>
           ) : (
@@ -160,14 +160,14 @@ export default function Friends() {
               const friendId = f.sender_id === profile.id ? f.receiver_id : f.sender_id
               const friendProfile = friendProfiles[friendId] || {}
               return (
-                <div key={friendId} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+                <div key={friendId} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 flex items-center justify-between hover:bg-[var(--r-hover)] transition-colors duration-150">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                      <span className="text-sm font-bold text-primary-700">{friendProfile.full_name?.[0]?.toUpperCase()}</span>
+                    <div className="w-10 h-10 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20">
+                      <span className="text-sm font-bold text-primary-600">{friendProfile.full_name?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-gray-900 text-sm truncate">{friendProfile.full_name}</h3>
-                      <p className="text-[11px] text-gray-500 truncate">📍 {friendProfile.city} | 💼 {friendProfile.occupation}</p>
+                      <h3 className="font-bold text-[var(--r-text)] text-sm truncate">{friendProfile.full_name}</h3>
+                      <p className="text-[11px] text-[var(--r-meta)] truncate">📍 {friendProfile.city} | 💼 {friendProfile.occupation}</p>
                     </div>
                   </div>
                   <div className="flex gap-2 items-center ml-3 shrink-0">
@@ -186,7 +186,7 @@ export default function Friends() {
                           deleteFriendship(friendId)
                         }
                       }}
-                      className="bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-500 border border-gray-150 hover:border-red-100 text-xs font-medium px-3.5 py-2 rounded-xl transition-colors"
+                      className="bg-[var(--r-card)] hover:bg-red-500/10 text-[var(--r-meta)] hover:text-red-500 border border-[var(--r-border)] hover:border-red-500/20 text-xs font-medium px-3.5 py-2 rounded-xl transition-colors"
                     >
                       Çıkar
                     </button>

@@ -3,9 +3,9 @@ import { supabase } from '../lib/supabase'
 
 function Section({ title, children }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
-      <div className="px-4 py-3 border-b border-gray-50 bg-gray-50">
-        <h2 className="font-semibold text-gray-900 text-sm">{title}</h2>
+    <div className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm overflow-hidden mb-4">
+      <div className="px-4 py-3 border-b border-[var(--r-border)] bg-[var(--r-bg)]/50">
+        <h2 className="font-semibold text-[var(--r-text)] text-sm">{title}</h2>
       </div>
       <div className="p-4">{children}</div>
     </div>
@@ -94,15 +94,15 @@ export default function Admin() {
 
   return (
     <div className="pb-8">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Yönetim Paneli</h1>
+      <h1 className="text-xl font-bold text-[var(--r-text)] mb-4">Yönetim Paneli</h1>
 
-      <div className="flex gap-2 mb-4 bg-gray-100 p-1.5 rounded-2xl">
+      <div className="flex gap-2 mb-4 bg-[var(--r-hover)] p-1.5 rounded-2xl">
         {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
             className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
-              activeTab === t.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              activeTab === t.key ? 'bg-[var(--r-card)] text-[var(--r-text)] shadow-sm' : 'text-[var(--r-meta)] hover:text-[var(--r-text)]'
             }`}
           >
             {t.label}
@@ -117,36 +117,36 @@ export default function Admin() {
       ) : activeTab === 'pending' ? (
         <Section title="Onay Bekleyen Başvurular">
           {pending.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4">Bekleyen başvuru yok.</p>
+            <p className="text-xs text-[var(--r-meta)] text-center py-4">Bekleyen başvuru yok.</p>
           ) : (
             <div className="space-y-3">
               {pending.map(u => (
-                <div key={u.id} className="flex items-center justify-between p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                <div key={u.id} className="flex items-center justify-between p-3.5 bg-[var(--r-card)] border border-[var(--r-border)] rounded-2xl shadow-sm">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center shrink-0">
-                      <span className="font-bold text-yellow-700 text-sm">{u.full_name?.[0]?.toUpperCase()}</span>
+                    <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20">
+                      <span className="font-bold text-amber-600 text-sm">{u.full_name?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-sm text-gray-900 truncate">{u.full_name}</p>
-                      <p className="text-xs text-gray-400 truncate">@{u.username}</p>
+                      <p className="font-bold text-sm text-[var(--r-text)] truncate">{u.full_name}</p>
+                      <p className="text-xs text-[var(--r-meta)] truncate">@{u.username}</p>
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0 ml-3">
                     <button
                       onClick={() => approveUser(u.id)}
-                      className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-3.5 py-2 rounded-xl font-semibold transition-colors"
+                      className="text-xs bg-green-500/10 hover:bg-green-500/[0.15] text-green-600 px-3.5 py-2 rounded-xl font-semibold transition-colors border border-green-500/20"
                     >
                       Onayla
                     </button>
                     <button
                       onClick={() => rejectUser(u.id)}
-                      className="text-xs bg-orange-50 hover:bg-orange-100 text-orange-700 px-3 py-2 rounded-xl font-semibold transition-colors"
+                      className="text-xs bg-amber-500/10 hover:bg-amber-500/[0.15] text-amber-600 px-3 py-2 rounded-xl font-semibold transition-colors border border-amber-500/20"
                     >
                       Reddet
                     </button>
                     <button
                       onClick={() => deleteUser(u.id)}
-                      className="text-xs bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-xl font-semibold transition-colors"
+                      className="text-xs bg-red-500/10 hover:bg-red-500/[0.15] text-red-500 p-2 rounded-xl font-semibold transition-colors border border-red-500/20"
                       title="Komple Sil"
                     >
                       Sil
@@ -160,18 +160,18 @@ export default function Admin() {
       ) : activeTab === 'rejected' ? (
         <Section title="Dondurulmuş / Reddedilmiş Hesaplar">
           {rejected.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4">Dondurulmuş hesap yok.</p>
+            <p className="text-xs text-[var(--r-meta)] text-center py-4">Dondurulmuş hesap yok.</p>
           ) : (
             <div className="space-y-3">
               {rejected.map(u => (
-                <div key={u.id} className="flex items-center justify-between p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                <div key={u.id} className="flex items-center justify-between p-3.5 bg-[var(--r-card)] border border-[var(--r-border)] rounded-2xl shadow-sm">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                      <span className="font-bold text-red-700 text-sm">{u.full_name?.[0]?.toUpperCase()}</span>
+                    <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0 border border-red-500/20">
+                      <span className="font-bold text-red-500 text-sm">{u.full_name?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-sm text-gray-900 truncate">{u.full_name}</p>
-                      <p className="text-xs text-gray-500 truncate">@{u.username}</p>
+                      <p className="font-bold text-sm text-[var(--r-text)] truncate">{u.full_name}</p>
+                      <p className="text-xs text-[var(--r-meta)] truncate">@{u.username}</p>
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0 ml-3">
@@ -183,7 +183,7 @@ export default function Admin() {
                     </button>
                     <button
                       onClick={() => deleteUser(u.id)}
-                      className="text-xs bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-xl font-semibold transition-colors"
+                      className="text-xs bg-red-500/10 hover:bg-red-500/[0.15] text-red-500 p-2 rounded-xl font-semibold transition-colors border border-red-500/20"
                       title="Komple Sil"
                     >
                       Sil
@@ -197,28 +197,30 @@ export default function Admin() {
       ) : (
         <Section title="Onaylı Üyeler">
           {members.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4">Henüz onaylı üye yok.</p>
+            <p className="text-xs text-[var(--r-meta)] text-center py-4">Henüz onaylı üye yok.</p>
           ) : (
             <div className="space-y-3">
               {members.map(u => (
-                <div key={u.id} className="flex items-center justify-between p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                <div key={u.id} className="flex items-center justify-between p-3.5 bg-[var(--r-card)] border border-[var(--r-border)] rounded-2xl shadow-sm">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                      <span className="font-bold text-primary-700 text-sm">{u.full_name?.[0]?.toUpperCase()}</span>
+                    <div className="w-10 h-10 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20">
+                      <span className="font-bold text-primary-600 text-sm">{u.full_name?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-bold text-sm text-gray-900 truncate">{u.full_name}</p>
-                        {u.is_admin && <span className="text-[9px] bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded font-bold uppercase">Yönetici</span>}
+                        <p className="font-bold text-sm text-[var(--r-text)] truncate">{u.full_name}</p>
+                        {u.is_admin && <span className="text-[9px] bg-primary-500/10 text-primary-600 px-1.5 py-0.5 rounded font-bold uppercase border border-primary-500/20">Yönetici</span>}
                       </div>
-                      <p className="text-xs text-gray-400 truncate">@{u.username}</p>
+                      <p className="text-xs text-[var(--r-meta)] truncate">@{u.username}</p>
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0 ml-3">
                     <button
                       onClick={() => toggleAdmin(u.id, u.is_admin)}
-                      className={`text-xs px-3.5 py-2 rounded-xl font-semibold transition-colors ${
-                        u.is_admin ? 'bg-primary-50 text-primary-700 hover:bg-primary-100' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      className={`text-xs px-3.5 py-2 rounded-xl font-semibold transition-colors border ${
+                        u.is_admin
+                          ? 'bg-primary-500/10 text-primary-600 hover:bg-primary-500/[0.15] border-primary-500/20'
+                          : 'bg-[var(--r-hover)] text-[var(--r-meta)] hover:bg-[var(--r-border)] border-[var(--r-border)]'
                       }`}
                     >
                       {u.is_admin ? 'Yetki Al' : 'Yönetici Yap'}
@@ -227,13 +229,13 @@ export default function Admin() {
                       <>
                         <button
                           onClick={() => suspendUser(u.id)}
-                          className="text-xs bg-orange-50 hover:bg-orange-100 text-orange-700 px-3.5 py-2 rounded-xl font-semibold transition-colors"
+                          className="text-xs bg-amber-500/10 hover:bg-amber-500/[0.15] text-amber-600 px-3.5 py-2 rounded-xl font-semibold transition-colors border border-amber-500/20"
                         >
                           Askıya Al
                         </button>
                         <button
                           onClick={() => deleteUser(u.id)}
-                          className="text-xs bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-xl font-semibold transition-colors"
+                          className="text-xs bg-red-500/10 hover:bg-red-500/[0.15] text-red-500 p-2 rounded-xl font-semibold transition-colors border border-red-500/20"
                           title="Komple Sil"
                         >
                           Sil
