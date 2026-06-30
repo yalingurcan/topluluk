@@ -127,7 +127,7 @@ export default function Members() {
   return (
     <div className="pb-8">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold text-[var(--r-text)]">Üyeler & Eşleşme</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-[var(--r-text)]">Üyeler</h1>
         <div className="flex bg-[var(--r-hover)]/80 rounded-xl p-0.5 border border-[var(--r-border)]/50">
           <button
             type="button"
@@ -138,7 +138,7 @@ export default function Members() {
                 : 'text-[var(--r-meta)] hover:text-[var(--r-text)]'
             }`}
           >
-            Liste Görünümü
+            Liste
           </button>
           <button
             type="button"
@@ -149,7 +149,7 @@ export default function Members() {
                 : 'text-[var(--r-meta)] hover:text-[var(--r-text)]'
             }`}
           >
-            Harita Görünümü
+            Harita
           </button>
         </div>
       </div>

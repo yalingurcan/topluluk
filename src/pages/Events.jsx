@@ -116,7 +116,7 @@ export default function Events() {
     <div className="pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex items-center justify-between sm:justify-start gap-4">
-          <h1 className="text-2xl font-bold text-[var(--r-text)]">Etkinlikler</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-[var(--r-text)]">Etkinlikler</h1>
           <div className="flex bg-[var(--r-hover)]/80 rounded-xl p-0.5 border border-[var(--r-border)]/50">
             <button
               type="button"

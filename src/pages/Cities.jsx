@@ -97,7 +97,7 @@ export default function Cities() {
   return (
     <div className="pb-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--r-text)] mb-1">Şehirler</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-[var(--r-text)] mb-1">Şehirler</h1>
         <p className="text-sm text-[var(--r-meta)]">
           Şehrindeki topluluğu keşfet — üyeler, etkinlikler ve konular.
         </p>

@@ -115,7 +115,7 @@ export default function Feed() {
               <div className="flex-1 min-w-0">
                 <h4 className="font-semibold text-[var(--r-text)] text-sm mb-1">Akışını kişiselleştir</h4>
                 <p className="text-xs text-[var(--r-meta)] leading-relaxed">
-                  Şehirler ve Konular sayfalarından takip ettiklerini burada görürsün. Henüz takip etmediysen tüm paylaşımlar gösterilir.
+                  Şehir veya konu takip et, akışın özelleşsin.
                 </p>
                 <button
                   onClick={dismissBanner}
@@ -129,7 +129,7 @@ export default function Feed() {
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-[var(--r-text)]">Ana Sayfa</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-[var(--r-text)]">Ana Sayfa</h1>
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowMenu(m => !m)}
