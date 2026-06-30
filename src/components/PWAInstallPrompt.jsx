@@ -66,7 +66,7 @@ export default function PWAInstallPrompt() {
   return (
     <>
       {/* Banner */}
-      <div className="lg:hidden fixed bottom-16 left-4 right-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-4 rounded-xl shadow-xl z-50 flex items-center justify-between border border-white/10 animate-fade-in">
+      <div className="lg:hidden fixed bottom-16 left-4 right-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white p-4 rounded-xl shadow-xl z-50 flex items-center justify-between border border-white/10 animate-fade-in">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +81,7 @@ export default function PWAInstallPrompt() {
         <div className="flex items-center gap-2">
           <button 
             onClick={handleInstallClick} 
-            className="bg-white text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-opacity-95 transition-all shadow-sm shrink-0"
+            className="bg-white text-primary-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-opacity-95 transition-all shadow-sm shrink-0"
           >
             Yükle
           </button>
@@ -110,7 +110,7 @@ export default function PWAInstallPrompt() {
               </svg>
             </button>
             <div className="text-center mb-5">
-              <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-primary-500/10 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
@@ -146,7 +146,7 @@ export default function PWAInstallPrompt() {
                 setShowIOSInstructions(false)
                 handleDismiss()
               }} 
-              className="mt-6 w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow"
+              className="mt-6 w-full bg-primary-600 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-700 transition-colors shadow"
             >
               Anladım
             </button>
