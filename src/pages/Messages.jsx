@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Messages() {
-  const { profile } = useAuth()
+  const { profile, displayName, canSeeFullProfile } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const targetUserId = searchParams.get('user')
 
@@ -130,7 +130,7 @@ export default function Messages() {
       // 1. Fetch DM list
       const { data: dmData } = await supabase
         .from('direct_messages')
-        .select('*, sender:profiles!sender_id(id, full_name, username), receiver:profiles!receiver_id(id, full_name, username)')
+        .select('*, sender:profiles!sender_id(id, full_name, username, privacy), receiver:profiles!receiver_id(id, full_name, username, privacy)')
         .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`)
         .order('created_at', { ascending: true })
 
@@ -145,7 +145,7 @@ export default function Messages() {
       // 2. Fetch friends to support starting a new chat
       const { data: friendshipData } = await supabase
         .from('friendships')
-        .select('*, sender:profiles!sender_id(id, full_name, username), receiver:profiles!receiver_id(id, full_name, username)')
+        .select('*, sender:profiles!sender_id(id, full_name, username, privacy), receiver:profiles!receiver_id(id, full_name, username, privacy)')
         .eq('status', 'accepted')
         .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`)
 
@@ -407,12 +407,12 @@ export default function Messages() {
                   >
                     <div className="w-10 h-10 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20">
                       <span className="text-sm font-bold text-primary-600">
-                        {c.partner.full_name?.[0]?.toUpperCase()}
+                        {(canSeeFullProfile(c.partner.id) ? c.partner.full_name : c.partner.username)?.[0]?.toUpperCase()}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline mb-0.5">
-                        <h4 className="font-bold text-[var(--r-text)] text-sm truncate">{c.partner.full_name}</h4>
+                        <h4 className="font-bold text-[var(--r-text)] text-sm truncate">{displayName(c.partner)}</h4>
                         <span className="text-[10px] text-[var(--r-meta)] shrink-0">{timeStr}</span>
                       </div>
                       <p className="text-xs text-[var(--r-meta)] truncate">{c.lastMessage.body}</p>
@@ -442,11 +442,11 @@ export default function Messages() {
                 </button>
                 <div className="w-9 h-9 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
                   <span className="text-sm font-bold text-primary-600">
-                    {activePartner.full_name?.[0]?.toUpperCase()}
+                    {(canSeeFullProfile(activePartner.id) ? activePartner.full_name : activePartner.username)?.[0]?.toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <h3 className="font-bold text-[var(--r-text)] text-sm leading-tight">{activePartner.full_name}</h3>
+                  <h3 className="font-bold text-[var(--r-text)] text-sm leading-tight">{displayName(activePartner)}</h3>
                   <p className="text-[10px] text-[var(--r-meta)] leading-none mt-0.5">@{activePartner.username}</p>
                 </div>
               </div>
@@ -601,11 +601,11 @@ export default function Messages() {
                   >
                     <div className="w-9 h-9 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
                       <span className="text-sm font-bold text-primary-600">
-                        {user.full_name?.[0]?.toUpperCase()}
+                        {(canSeeFullProfile(user.id) ? user.full_name : user.username)?.[0]?.toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-[var(--r-text)] text-xs">{user.full_name}</h4>
+                      <h4 className="font-bold text-[var(--r-text)] text-xs">{displayName(user)}</h4>
                       <p className="text-[9px] text-[var(--r-meta)]">@{user.username}</p>
                     </div>
                   </button>

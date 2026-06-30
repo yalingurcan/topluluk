@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function UserProfileModal() {
-  const { profile } = useAuth()
+  const { profile, displayName, canSeeField, refreshFriendIds } = useAuth()
   const navigate = useNavigate()
   const [userId, setUserId] = useState(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -63,9 +63,6 @@ export default function UserProfileModal() {
   }
 
   const isSelf = profile?.id === userId
-  const isAdmin = profile?.is_admin === true
-  const isFriend = friendship && friendship.status === 'accepted'
-  const hasAccess = isSelf || isAdmin || isFriend
 
   async function handleSendRequest() {
     if (actionLoading) return
@@ -103,6 +100,7 @@ export default function UserProfileModal() {
       .eq('receiver_id', profile.id)
     setFriendship(prev => prev ? { ...prev, status: 'accepted' } : null)
     setActionLoading(false)
+    refreshFriendIds()
   }
 
   async function handleRemoveFriend() {
@@ -115,6 +113,7 @@ export default function UserProfileModal() {
       .or(`and(sender_id.eq.${profile.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${profile.id})`)
     setFriendship(null)
     setActionLoading(false)
+    refreshFriendIds()
   }
 
   if (!isOpen) return null
@@ -150,81 +149,82 @@ export default function UserProfileModal() {
               <div className="flex items-center gap-4 border-b border-[var(--r-border)] pb-4">
                 <div className="w-14 h-14 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20 shrink-0">
                   <span className="text-xl font-bold text-primary-600">
-                    {hasAccess ? userProfile.full_name?.[0]?.toUpperCase() : userProfile.username?.[0]?.toUpperCase()}
+                    {canSeeField(userProfile, 'full_name') ? userProfile.full_name?.[0]?.toUpperCase() : userProfile.username?.[0]?.toUpperCase()}
                   </span>
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-bold text-[var(--r-text)] text-base truncate">
-                    {hasAccess ? userProfile.full_name : `@${userProfile.username}`}
+                    {displayName(userProfile)}
                   </h2>
                   <p className="text-xs text-[var(--r-meta)] truncate">@{userProfile.username}</p>
                 </div>
               </div>
 
-              {/* Profile Stats / Fields */}
-              {hasAccess ? (
-                <div className="space-y-3.5 text-sm text-[var(--r-text)]">
-                  <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
-                    <span className="text-[var(--r-meta)] text-xs">📍 ŞEHİR</span>
-                    <span className="font-semibold text-[var(--r-text)]">{userProfile.city || 'Belirtilmemiş'}</span>
-                  </div>
-                  {userProfile.age && (
-                    <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
-                      <span className="text-[var(--r-meta)] text-xs">📅 YAŞ</span>
-                      <span className="font-semibold text-[var(--r-text)]">{userProfile.age}</span>
-                    </div>
-                  )}
-                  {userProfile.gender && (
-                    <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
-                      <span className="text-[var(--r-meta)] text-xs">👤 CİNSİYET</span>
-                      <span className="font-semibold text-[var(--r-text)]">{userProfile.gender}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
-                    <span className="text-[var(--r-meta)] text-xs">💼 MESLEK</span>
-                    <span className="font-semibold text-[var(--r-text)]">{userProfile.occupation || 'Belirtilmemiş'}</span>
-                  </div>
-                  {(userProfile.marital_status || userProfile.children_count !== undefined) && (
-                    <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
-                      <span className="text-[var(--r-meta)] text-xs">👪 AİLE DURUMU</span>
-                      <span className="font-semibold text-[var(--r-text)]">
-                        {[
-                          userProfile.marital_status,
-                          userProfile.children_count > 0 ? `${userProfile.children_count} Çocuklu` : (userProfile.children_count === 0 ? 'Çocuksuz' : null)
-                        ].filter(Boolean).join(' | ')}
-                      </span>
-                    </div>
-                  )}
-                  {userProfile.hobbies && (
-                    <div className="flex flex-col gap-1 border-b border-[var(--r-border)] pb-2">
-                      <span className="text-[var(--r-meta)] text-xs">🎨 HOBİLER</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {userProfile.hobbies.split(',').map((h, i) => (
-                          <span key={i} className="text-[11px] bg-primary-500/10 text-primary-600 px-2.5 py-0.5 rounded-full font-medium">{h.trim()}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {userProfile.interests && (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[var(--r-meta)] text-xs">✨ İLGİ ALANLARI</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {userProfile.interests.split(',').map((it, i) => (
-                          <span key={i} className="text-[11px] bg-primary-500/[0.07] text-primary-500 px-2.5 py-0.5 rounded-full font-medium">{it.trim()}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              {/* Profile Stats / Fields — city & occupation are public, each other field follows its own privacy setting */}
+              <div className="space-y-3.5 text-sm text-[var(--r-text)]">
+                <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
+                  <span className="text-[var(--r-meta)] text-xs">📍 ŞEHİR</span>
+                  <span className="font-semibold text-[var(--r-text)]">{userProfile.city || 'Belirtilmemiş'}</span>
                 </div>
-              ) : (
-                <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-center">
-                  <span className="text-xl">🔒</span>
-                  <h4 className="font-bold text-amber-600 text-xs mt-2">Profil Bilgileri Gizlidir</h4>
-                  <p className="text-[11px] text-amber-500 mt-1 leading-relaxed">
-                    Bu üyenin detaylı bilgilerini görebilmek için arkadaş olmanız gerekmektedir.
-                  </p>
+                <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
+                  <span className="text-[var(--r-meta)] text-xs">💼 MESLEK</span>
+                  <span className="font-semibold text-[var(--r-text)]">{userProfile.occupation || 'Belirtilmemiş'}</span>
                 </div>
-              )}
+
+                {canSeeField(userProfile, 'age') && userProfile.age && (
+                  <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
+                    <span className="text-[var(--r-meta)] text-xs">📅 YAŞ</span>
+                    <span className="font-semibold text-[var(--r-text)]">{userProfile.age}</span>
+                  </div>
+                )}
+                {canSeeField(userProfile, 'gender') && userProfile.gender && (
+                  <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
+                    <span className="text-[var(--r-meta)] text-xs">👤 CİNSİYET</span>
+                    <span className="font-semibold text-[var(--r-text)]">{userProfile.gender}</span>
+                  </div>
+                )}
+                {(canSeeField(userProfile, 'marital_status') || canSeeField(userProfile, 'children_count')) &&
+                  (userProfile.marital_status || userProfile.children_count !== undefined) && (
+                  <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
+                    <span className="text-[var(--r-meta)] text-xs">👪 AİLE DURUMU</span>
+                    <span className="font-semibold text-[var(--r-text)]">
+                      {[
+                        userProfile.marital_status,
+                        userProfile.children_count > 0 ? `${userProfile.children_count} Çocuklu` : (userProfile.children_count === 0 ? 'Çocuksuz' : null)
+                      ].filter(Boolean).join(' | ')}
+                    </span>
+                  </div>
+                )}
+                {canSeeField(userProfile, 'hobbies') && userProfile.hobbies && (
+                  <div className="flex flex-col gap-1 border-b border-[var(--r-border)] pb-2">
+                    <span className="text-[var(--r-meta)] text-xs">🎨 HOBİLER</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {userProfile.hobbies.split(',').map((h, i) => (
+                        <span key={i} className="text-[11px] bg-primary-500/10 text-primary-600 px-2.5 py-0.5 rounded-full font-medium">{h.trim()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {canSeeField(userProfile, 'interests') && userProfile.interests && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[var(--r-meta)] text-xs">✨ İLGİ ALANLARI</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {userProfile.interests.split(',').map((it, i) => (
+                        <span key={i} className="text-[11px] bg-primary-500/[0.07] text-primary-500 px-2.5 py-0.5 rounded-full font-medium">{it.trim()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {['age', 'gender', 'marital_status', 'hobbies', 'interests'].some(f => !canSeeField(userProfile, f)) && (
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-center">
+                    <span className="text-xl">🔒</span>
+                    <h4 className="font-bold text-amber-600 text-xs mt-2">Bazı Bilgiler Gizli</h4>
+                    <p className="text-[11px] text-amber-500 mt-1 leading-relaxed">
+                      Bu üye bazı bilgilerini sadece arkadaşlarına veya yakın arkadaşlarına açmış.
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* Action Buttons */}
               {!isSelf && (

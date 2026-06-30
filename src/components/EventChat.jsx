@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function EventChat({ eventId }) {
-  const { profile } = useAuth()
+  const { profile, displayName } = useAuth()
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
   const [sending, setSending] = useState(false)
@@ -59,7 +59,7 @@ export default function EventChat({ eventId }) {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, username')
+        .select('full_name, username, privacy')
         .eq('id', userId)
         .single()
       if (data) {
@@ -77,7 +77,7 @@ export default function EventChat({ eventId }) {
     try {
       const { data, error } = await supabase
         .from('event_messages')
-        .select('*, profiles!sender_id(full_name, username)')
+        .select('*, profiles!sender_id(full_name, username, privacy)')
         .eq('event_id', eventId)
         .order('created_at', { ascending: true })
 
@@ -145,7 +145,7 @@ export default function EventChat({ eventId }) {
               <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                 {!isMe && (
                   <span className="text-[10px] text-[var(--r-meta)] font-medium ml-1.5 mb-0.5">
-                    {msg.profiles?.full_name || 'Yükleniyor...'}
+                    {msg.profiles ? displayName({ id: msg.sender_id, ...msg.profiles }) : 'Yükleniyor...'}
                   </span>
                 )}
                 <div className={`flex items-end gap-1.5 max-w-[80%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>

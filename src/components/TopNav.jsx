@@ -21,7 +21,7 @@ export default function TopNav() {
     <header className="hidden md:flex fixed top-0 left-0 right-0 h-14 bg-[var(--r-nav)] border-b border-[var(--r-border)] z-50 items-center px-6 gap-4">
       <Link to="/" className="flex items-center gap-2 mr-6 shrink-0">
         <img src="/favicon.svg" alt="Alamancı" className="w-8 h-8" />
-        <span className="text-xl font-bold text-primary-500 tracking-tight">Alamancı</span>
+        <span className="text-xl font-bold text-brand-orange tracking-tight">Alamancı</span>
       </Link>
       <nav className="flex gap-5 flex-1">
         {[
@@ -62,6 +62,16 @@ export default function TopNav() {
         )}
       </nav>
       <div className="flex items-center gap-2">
+        {/* Help / FAQ */}
+        <Link
+          to="/yardim"
+          title="Yardım & SSS"
+          className="p-2 rounded-full text-[var(--r-meta)] hover:text-[var(--r-text)] hover:bg-[var(--r-hover)] transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </Link>
         {/* Dark/Light toggle */}
         <button
           onClick={toggleTheme}

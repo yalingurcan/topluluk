@@ -439,3 +439,26 @@ begin
 end;
 $$ language plpgsql security definer;
 
+-- ─────────────────────────────────────────────
+-- TIERED PROFILE PRIVACY (public / friends / close_friends)
+-- ─────────────────────────────────────────────
+
+-- One-directional "close friend" tagging: each side of a friendship can independently
+-- mark the other as a close friend, granting them elevated visibility into their own profile.
+alter table public.friendships
+  add column if not exists close_by_sender boolean not null default false,
+  add column if not exists close_by_receiver boolean not null default false;
+
+-- Per-field profile visibility: 'public' | 'friends' | 'close_friends'.
+-- Username, city, and occupation are always public and not included here.
+alter table public.profiles
+  add column if not exists privacy jsonb not null default '{
+    "full_name": "friends",
+    "age": "friends",
+    "gender": "friends",
+    "marital_status": "friends",
+    "children_count": "friends",
+    "hobbies": "friends",
+    "interests": "friends"
+  }'::jsonb;
+

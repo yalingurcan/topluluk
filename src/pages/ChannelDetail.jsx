@@ -28,9 +28,9 @@ export default function ChannelDetail() {
   async function fetchData() {
     setLoading(true)
     const [{ data: ch }, { data: subCh }, { data: p }, { data: allCh }] = await Promise.all([
-      supabase.from('channels').select('*, profiles!created_by(full_name, username)').eq('id', id).single(),
-      supabase.from('channels').select('*, profiles!created_by(full_name, username)').eq('parent_id', id).order('created_at', { ascending: false }),
-      supabase.from('posts').select('*, profiles(full_name, username), channels(name)').eq('channel_id', id).order('created_at', { ascending: false }),
+      supabase.from('channels').select('*, profiles!created_by(full_name, username, privacy)').eq('id', id).single(),
+      supabase.from('channels').select('*, profiles!created_by(full_name, username, privacy)').eq('parent_id', id).order('created_at', { ascending: false }),
+      supabase.from('posts').select('*, profiles(full_name, username, privacy), channels(name)').eq('channel_id', id).order('created_at', { ascending: false }),
       supabase.from('channels').select('id, name, city').is('parent_id', null)
     ])
     setChannel(ch)

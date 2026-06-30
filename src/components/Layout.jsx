@@ -66,7 +66,7 @@ export default function Layout() {
       <header className="md:hidden fixed top-0 left-0 right-0 h-12 bg-[var(--r-nav)] border-b border-[var(--r-border)] z-50 flex items-center justify-between px-4">
         <div className="flex items-center gap-1.5">
           <img src="/favicon.svg" alt="Alamancı" className="w-7 h-7" />
-          <span className="text-lg font-bold text-primary-500 tracking-tight">Alamancı</span>
+          <span className="text-lg font-bold text-brand-orange tracking-tight">Alamancı</span>
         </div>
         <div className="flex items-center gap-1">
           {/* Dark/Light toggle - mobil */}

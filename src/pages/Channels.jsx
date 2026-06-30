@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import CreatePostModal from '../components/CreatePostModal'
 
 export default function Channels() {
-  const { profile } = useAuth()
+  const { profile, displayName } = useAuth()
   const [channels, setChannels] = useState([])
   const [followedChannels, setFollowedChannels] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,7 +22,7 @@ export default function Channels() {
     const [{ data: ch }, { data: follows }] = await Promise.all([
       supabase
         .from('channels')
-        .select('*, profiles!created_by(full_name)')
+        .select('*, profiles!created_by(full_name, username, privacy)')
         .is('city', null)
         .order('created_at', { ascending: false }),
       supabase
@@ -63,7 +63,7 @@ export default function Channels() {
     const { data } = await supabase
       .from('channels')
       .insert(insertData)
-      .select('*, profiles!created_by(full_name)')
+      .select('*, profiles!created_by(full_name, username, privacy)')
       .single()
 
     if (data) {
@@ -124,7 +124,7 @@ export default function Channels() {
                   </span>
                   {ch.description && <p className="text-xs text-[var(--r-meta)] mt-0.5 line-clamp-2 leading-relaxed">{ch.description}</p>}
                   {profile?.is_admin && (
-                    <p className="text-[10px] text-[var(--r-meta)] mt-1.5">Oluşturan: {ch.profiles?.full_name}</p>
+                    <p className="text-[10px] text-[var(--r-meta)] mt-1.5">Oluşturan: {ch.profiles && displayName({ id: ch.created_by, ...ch.profiles })}</p>
                   )}
                 </Link>
                 <div className="flex items-center shrink-0 self-center">

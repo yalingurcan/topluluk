@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Friends() {
-  const { profile } = useAuth()
+  const { profile, displayName, refreshFriendIds } = useAuth()
   const [friendships, setFriendships] = useState([])
   const [friendProfiles, setFriendProfiles] = useState({})
   const [loading, setLoading] = useState(true)
@@ -53,6 +53,23 @@ export default function Friends() {
 
     setFriendships(f =>
       f.map(x => (x.sender_id === senderId && x.receiver_id === profile.id ? { ...x, status: 'accepted' } : x))
+    )
+  }
+
+  // One-directional: marking someone as a close friend gives THEM more access to YOUR profile.
+  // friendships has a composite primary key (sender_id, receiver_id) — no surrogate id column.
+  async function toggleCloseFriend(rel) {
+    const amISender = rel.sender_id === profile.id
+    const field = amISender ? 'close_by_sender' : 'close_by_receiver'
+    const nextValue = !(amISender ? rel.close_by_sender : rel.close_by_receiver)
+
+    await supabase
+      .from('friendships')
+      .update({ [field]: nextValue })
+      .eq('sender_id', rel.sender_id)
+      .eq('receiver_id', rel.receiver_id)
+    setFriendships(f =>
+      f.map(x => (x.sender_id === rel.sender_id && x.receiver_id === rel.receiver_id ? { ...x, [field]: nextValue } : x))
     )
   }
 
@@ -123,10 +140,10 @@ export default function Friends() {
                 <div key={r.sender_id} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 flex items-center justify-between hover:bg-[var(--r-hover)] transition-colors duration-150">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20">
-                      <span className="text-sm font-bold text-primary-600">{senderProfile.full_name?.[0]?.toUpperCase()}</span>
+                      <span className="text-sm font-bold text-primary-600">{senderProfile.username?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-[var(--r-text)] text-sm truncate">{senderProfile.full_name}</h3>
+                      <h3 className="font-bold text-[var(--r-text)] text-sm truncate">@{senderProfile.username}</h3>
                       <p className="text-[11px] text-[var(--r-meta)] truncate">📍 {senderProfile.city} | 💼 {senderProfile.occupation}</p>
                     </div>
                   </div>
@@ -159,38 +176,53 @@ export default function Friends() {
             activeFriends.map(f => {
               const friendId = f.sender_id === profile.id ? f.receiver_id : f.sender_id
               const friendProfile = friendProfiles[friendId] || {}
+              const amISender = f.sender_id === profile.id
+              const iMarkedThemClose = amISender ? f.close_by_sender : f.close_by_receiver
               return (
-                <div key={friendId} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 flex items-center justify-between hover:bg-[var(--r-hover)] transition-colors duration-150">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20">
-                      <span className="text-sm font-bold text-primary-600">{friendProfile.full_name?.[0]?.toUpperCase()}</span>
+                <div key={friendId} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 hover:bg-[var(--r-hover)] transition-colors duration-150">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20">
+                        <span className="text-sm font-bold text-primary-600">{(friendProfile.full_name || friendProfile.username)?.[0]?.toUpperCase()}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-[var(--r-text)] text-sm truncate">{displayName(friendProfile)}</h3>
+                        <p className="text-[11px] text-[var(--r-meta)] truncate">📍 {friendProfile.city} | 💼 {friendProfile.occupation}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-[var(--r-text)] text-sm truncate">{friendProfile.full_name}</h3>
-                      <p className="text-[11px] text-[var(--r-meta)] truncate">📍 {friendProfile.city} | 💼 {friendProfile.occupation}</p>
+                    <div className="flex gap-2 items-center ml-3 shrink-0">
+                      <Link
+                        to={`/mesajlar?user=${friendId}`}
+                        className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Mesaj Gönder
+                      </Link>
+                      <button
+                        onClick={() => {
+                          if (confirm(`${displayName(friendProfile)} isimli üyeyi arkadaşlarınızdan çıkarmak istediğinize emin misiniz?`)) {
+                            deleteFriendship(friendId)
+                          }
+                        }}
+                        className="bg-[var(--r-card)] hover:bg-red-500/10 text-[var(--r-meta)] hover:text-red-500 border border-[var(--r-border)] hover:border-red-500/20 text-xs font-medium px-3.5 py-2 rounded-xl transition-colors"
+                      >
+                        Çıkar
+                      </button>
                     </div>
                   </div>
-                  <div className="flex gap-2 items-center ml-3 shrink-0">
-                    <Link
-                      to={`/mesajlar?user=${friendId}`}
-                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                      Mesaj Gönder
-                    </Link>
-                    <button
-                      onClick={() => {
-                        if (confirm(`${friendProfile.full_name} isimli üyeyi arkadaşlarınızdan çıkarmak istediğinize emin misiniz?`)) {
-                          deleteFriendship(friendId)
-                        }
-                      }}
-                      className="bg-[var(--r-card)] hover:bg-red-500/10 text-[var(--r-meta)] hover:text-red-500 border border-[var(--r-border)] hover:border-red-500/20 text-xs font-medium px-3.5 py-2 rounded-xl transition-colors"
-                    >
-                      Çıkar
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => toggleCloseFriend(f)}
+                    className={`mt-3 w-full text-xs font-semibold py-2 rounded-xl border transition-colors flex items-center justify-center gap-1.5 ${
+                      iMarkedThemClose
+                        ? 'bg-gold-500/10 text-gold-600 border-gold-500/30 hover:bg-gold-500/[0.15]'
+                        : 'bg-[var(--r-bg)] text-[var(--r-meta)] border-[var(--r-border)] hover:text-gold-600 hover:border-gold-500/30'
+                    }`}
+                    title="Yakın arkadaş olarak işaretlersen, profilinde 'Yakın Arkadaşlar' için ayırdığın bilgileri görebilir."
+                  >
+                    {iMarkedThemClose ? '★ Yakın Arkadaş' : '☆ Yakın Arkadaş Yap'}
+                  </button>
                 </div>
               )
             })

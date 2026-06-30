@@ -25,6 +25,7 @@ export default function Events() {
   const [form, setForm] = useState({ title: '', description: '', location: '', city: defaultCity || '', datetime: '', is_private: false })
   const [viewMode, setViewMode] = useState('list')
   const [copiedId, setCopiedId] = useState(null)
+  const [feedTab, setFeedTab] = useState('upcoming')
 
   useEffect(() => {
     // If defaultCity is changed, update the form city too
@@ -54,7 +55,7 @@ export default function Events() {
 
   async function fetchData() {
     const [{ data: ev }, { data: myRsvps }] = await Promise.all([
-      supabase.from('events').select('*, profiles!created_by(full_name, username)').order('event_date', { ascending: true }),
+      supabase.from('events').select('*, profiles!created_by(full_name, username, privacy)').order('event_date', { ascending: true }),
       supabase.from('rsvps').select('event_id, status').eq('user_id', profile.id)
     ])
     setEvents(ev || [])
@@ -92,7 +93,7 @@ export default function Events() {
         is_private: form.is_private,
         created_by: profile.id
       })
-      .select('*, profiles!created_by(full_name, username)')
+      .select('*, profiles!created_by(full_name, username, privacy)')
       .single()
     setCreating(false)
     if (error) { setCreateError(error.message); return }
@@ -144,7 +145,7 @@ export default function Events() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center justify-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
+          className="flex items-center justify-center gap-1.5 border border-primary-500/40 text-primary-600 hover:bg-primary-500/[0.06] px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -152,6 +153,29 @@ export default function Events() {
           Etkinlik Oluştur
         </button>
       </div>
+
+      {/* Feed tabs */}
+      {!loading && (
+        <div className="flex border-b border-[var(--r-border)] mb-4">
+          {[
+            { key: 'upcoming', label: 'Yaklaşan' },
+            { key: 'going', label: 'Katılacaklarım' },
+            { key: 'past', label: 'Geçmiş' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setFeedTab(tab.key)}
+              className={`flex-1 text-center py-2.5 text-sm font-semibold border-b-2 transition-all ${
+                feedTab === tab.key
+                  ? 'border-primary-600 text-primary-600'
+                  : 'border-transparent text-[var(--r-meta)] hover:text-[var(--r-text)]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {viewMode === 'map' && !loading && events.length > 0 && (
         <div className="mb-4">
@@ -163,88 +187,129 @@ export default function Events() {
         <div className="flex justify-center py-12">
           <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : events.length === 0 ? (
-        <div className="text-center py-20 text-[var(--r-meta)] bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)]">
-          <svg className="w-10 h-10 mx-auto mb-3 opacity-25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <p className="text-sm font-medium">Henüz etkinlik yok</p>
-          <p className="text-xs mt-1 opacity-70">İlk etkinliği sen oluştur.</p>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="mt-4 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold px-5 py-2 rounded-xl transition-colors"
-          >
-            Etkinlik Oluştur
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {events.map(ev => (
-            <div
-              key={ev.id}
-              onClick={() => navigate(`/etkinlikler/${ev.id}`)}
-              className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm overflow-hidden cursor-pointer border-l-4 border-l-primary-500 hover:bg-[var(--r-hover)] transition-colors duration-150"
-            >
-              {ev.cover_image_url && (
-                <img src={ev.cover_image_url} alt="" className="w-full h-40 object-cover" />
+      ) : (() => {
+        const now = new Date()
+        let filtered = events
+
+        if (feedTab === 'upcoming') {
+          filtered = events.filter(ev => new Date(ev.event_date) >= now)
+        } else if (feedTab === 'going') {
+          filtered = events.filter(ev => new Date(ev.event_date) >= now && rsvps[ev.id] === 'going')
+        } else if (feedTab === 'past') {
+          filtered = events
+            .filter(ev => new Date(ev.event_date) < now)
+            .sort((a, b) => new Date(b.event_date) - new Date(a.event_date))
+        }
+
+        if (filtered.length === 0) {
+          const emptyMessages = {
+            upcoming: { title: 'Yaklaşan etkinlik yok', sub: 'İlk etkinliği sen oluştur.' },
+            going: { title: 'Katılacağın etkinlik yok', sub: 'Etkinlikleri inceleyip "Katılıyorum" de.' },
+            past: { title: 'Geçmiş etkinlik yok', sub: 'Geçmiş etkinlikler burada görünür.' },
+          }
+          const msg = emptyMessages[feedTab]
+          return (
+            <div className="text-center py-20 text-[var(--r-meta)] bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)]">
+              <svg className="w-10 h-10 mx-auto mb-3 opacity-25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-sm font-medium">{msg.title}</p>
+              <p className="text-xs mt-1 opacity-70">{msg.sub}</p>
+              {feedTab === 'upcoming' && (
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="mt-4 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold px-5 py-2 rounded-xl transition-colors"
+                >
+                  Etkinlik Oluştur
+                </button>
               )}
-              <div className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[10px] bg-primary-500/10 text-primary-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                    Etkinlik
-                  </span>
-                  {ev.is_private && (
-                    <span className="text-[10px] bg-amber-500/10 text-amber-600 border border-amber-500/20 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                      Özel
-                    </span>
-                  )}
-                  <span className="text-xs text-[var(--r-meta)]">
-                    {new Date(ev.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} eklendi
-                  </span>
-                </div>
-                <h3 className="font-semibold text-[var(--r-text)] text-sm">{ev.title}</h3>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <p className="text-xs text-primary-600 font-medium">📅 {formatDate(ev.event_date)}</p>
-                  {ev.city && (
-                    <span className="text-xs bg-amber-500/10 text-[var(--r-text)] border border-amber-500/20 px-2.5 py-0.5 rounded-full font-semibold">
-                      📍 {ev.city}
-                    </span>
-                  )}
-                </div>
-                {ev.location && (
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={e => e.stopPropagation()}
-                    className="text-xs text-[var(--r-meta)] hover:text-primary-600 hover:underline mt-0.5 inline-flex items-center gap-1"
-                  >
-                    📍 {ev.location}
-                  </a>
-                )}
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--r-border)]">
-                  <p className="text-[11px] text-[var(--r-meta)]" onClick={e => e.stopPropagation()}>
-                    Düzenleyen:{' '}
-                    <button
-                      onClick={() => window.showUserProfile && window.showUserProfile(ev.created_by)}
-                      className="text-primary-600 hover:underline font-semibold"
-                    >
-                      @{ev.profiles?.username}
-                    </button>
-                  </p>
-                  <Link
-                    to={`/etkinlikler/${ev.id}`}
-                    onClick={e => e.stopPropagation()}
-                    className="text-xs text-primary-600 font-medium hover:underline"
-                  >
-                    Katıl ve Detaylar →
-                  </Link>
-                </div>
-              </div>
             </div>
-          ))}
-        </div>
-      )}
+          )
+        }
+
+        return (
+          <div className="space-y-4">
+            {filtered.map(ev => {
+              const isPast = new Date(ev.event_date) < now
+              const myStatus = rsvps[ev.id]
+              return (
+                <div
+                  key={ev.id}
+                  onClick={() => navigate(`/etkinlikler/${ev.id}`)}
+                  className={`bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm overflow-hidden cursor-pointer border-l-4 hover:bg-[var(--r-hover)] transition-colors duration-150 ${
+                    isPast ? 'border-l-[var(--r-border)] opacity-80' : 'border-l-primary-500'
+                  }`}
+                >
+                  {ev.cover_image_url && (
+                    <img src={ev.cover_image_url} alt="" className="w-full h-40 object-cover" />
+                  )}
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {isPast ? (
+                        <span className="text-[10px] bg-[var(--r-hover)] text-[var(--r-meta)] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-[var(--r-border)]">
+                          Geçmiş
+                        </span>
+                      ) : (
+                        <span className="text-[10px] bg-primary-500/10 text-primary-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                          Etkinlik
+                        </span>
+                      )}
+                      {ev.is_private && (
+                        <span className="text-[10px] bg-amber-500/10 text-amber-600 border border-amber-500/20 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                          Özel
+                        </span>
+                      )}
+                      {myStatus === 'going' && (
+                        <span className="text-[10px] bg-green-500/10 text-green-600 border border-green-500/20 px-2 py-0.5 rounded-full font-bold">
+                          ✓ {isPast ? 'Katıldım' : 'Katılıyorum'}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-[var(--r-text)] text-sm">{ev.title}</h3>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <p className="text-xs text-primary-600 font-medium">📅 {formatDate(ev.event_date)}</p>
+                      {ev.city && (
+                        <span className="text-xs bg-amber-500/10 text-[var(--r-text)] border border-amber-500/20 px-2.5 py-0.5 rounded-full font-semibold">
+                          📍 {ev.city}
+                        </span>
+                      )}
+                    </div>
+                    {ev.location && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="text-xs text-[var(--r-meta)] hover:text-primary-600 hover:underline mt-0.5 inline-flex items-center gap-1"
+                      >
+                        📍 {ev.location}
+                      </a>
+                    )}
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--r-border)]">
+                      <p className="text-[11px] text-[var(--r-meta)]" onClick={e => e.stopPropagation()}>
+                        Düzenleyen:{' '}
+                        <button
+                          onClick={() => window.showUserProfile && window.showUserProfile(ev.created_by)}
+                          className="text-primary-600 hover:underline font-semibold"
+                        >
+                          @{ev.profiles?.username}
+                        </button>
+                      </p>
+                      <Link
+                        to={`/etkinlikler/${ev.id}`}
+                        onClick={e => e.stopPropagation()}
+                        className="text-xs text-primary-600 font-medium hover:underline"
+                      >
+                        {isPast ? 'Detaylar →' : 'Katıl ve Detaylar →'}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       {showCreate && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-0 md:p-4">

@@ -15,7 +15,7 @@ function formatDate(dt) {
 export default function CityDetail() {
   const { sehirAdi } = useParams()
   const cityName = decodeURIComponent(sehirAdi)
-  const { profile } = useAuth()
+  const { profile, displayName, canSeeFullProfile } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -81,8 +81,8 @@ export default function CityDetail() {
       { data: rsvpData },
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('status', 'approved').ilike('city', cityName),
-      supabase.from('events').select('*, profiles!created_by(full_name, username)').ilike('city', cityName).order('event_date', { ascending: true }),
-      supabase.from('posts').select('*, profiles(full_name, username), channels(name)').ilike('city', cityName).order('created_at', { ascending: false }),
+      supabase.from('events').select('*, profiles!created_by(full_name, username, privacy)').ilike('city', cityName).order('event_date', { ascending: true }),
+      supabase.from('posts').select('*, profiles(full_name, username, privacy), channels(name)').ilike('city', cityName).order('created_at', { ascending: false }),
       supabase.from('friendships').select('*').or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`),
       supabase.from('rsvps').select('event_id, status').eq('user_id', profile.id),
     ])
@@ -228,10 +228,10 @@ export default function CityDetail() {
                     <div key={member.id} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 flex items-center gap-3">
                       {/* Avatar */}
                       <div className="w-10 h-10 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 text-primary-600 font-bold text-sm">
-                        {member.full_name?.charAt(0)?.toUpperCase() || '?'}
+                        {(canSeeFullProfile(member.id) ? member.full_name?.charAt(0) : member.username?.charAt(0))?.toUpperCase() || '?'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-[var(--r-text)] text-sm truncate">{member.full_name}</p>
+                        <p className="font-semibold text-[var(--r-text)] text-sm truncate">{displayName(member)}</p>
                         {member.occupation && (
                           <p className="text-xs text-[var(--r-meta)] truncate">{member.occupation}</p>
                         )}

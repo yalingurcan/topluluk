@@ -11,7 +11,7 @@ function formatDate(dt) {
 
 export default function EventDetail() {
   const { id } = useParams()
-  const { profile } = useAuth()
+  const { profile, displayName } = useAuth()
   const navigate = useNavigate()
   const [event, setEvent] = useState(null)
   const [rsvps, setRsvps] = useState([])
@@ -46,7 +46,7 @@ export default function EventDetail() {
     setFriendsLoading(true)
     const { data } = await supabase
       .from('friendships')
-      .select('*, sender:profiles!sender_id(id, full_name), receiver:profiles!receiver_id(id, full_name)')
+      .select('*, sender:profiles!sender_id(id, full_name, username, privacy), receiver:profiles!receiver_id(id, full_name, username, privacy)')
       .eq('status', 'accepted')
       .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`)
     
@@ -100,7 +100,9 @@ export default function EventDetail() {
           url: urlToShare
         })
       } catch (err) {
-        console.log('Share canceled or failed', err)
+        if (err.name !== 'AbortError') {
+          console.error('Failed to share event:', err)
+        }
       }
     } else {
       try {
@@ -115,9 +117,9 @@ export default function EventDetail() {
 
   async function fetchData() {
     const [{ data: ev }, { data: allRsvps }, { data: allComments }] = await Promise.all([
-      supabase.from('events').select('*, profiles!created_by(full_name, username)').eq('id', id).single(),
-      supabase.from('rsvps').select('*, profiles(full_name, username)').eq('event_id', id),
-      supabase.from('event_comments').select('*, profiles(full_name, username)').eq('event_id', id).order('created_at', { ascending: true })
+      supabase.from('events').select('*, profiles!created_by(full_name, username, privacy)').eq('id', id).single(),
+      supabase.from('rsvps').select('*, profiles(full_name, username, privacy)').eq('event_id', id),
+      supabase.from('event_comments').select('*, profiles(full_name, username, privacy)').eq('event_id', id).order('created_at', { ascending: true })
     ])
     setEvent(ev)
     setForm({ title: ev?.title, description: ev?.description, location: ev?.location, datetime: ev?.event_date?.slice(0, 16) || '' })
@@ -170,7 +172,7 @@ export default function EventDetail() {
     const { data } = await supabase
       .from('event_comments')
       .insert({ event_id: id, author_id: profile.id, body: text, parent_id: parentId })
-      .select('*, profiles(full_name, username)')
+      .select('*, profiles(full_name, username, privacy)')
       .single()
 
     if (parentId) {
@@ -591,7 +593,7 @@ export default function EventDetail() {
                   const isInvited = invitedIds.has(friend.id)
                   return (
                     <div key={friend.id} className="flex items-center justify-between p-2 hover:bg-[var(--r-hover)] rounded-2xl transition-colors">
-                      <span className="text-sm font-semibold text-[var(--r-text)]">{friend.full_name}</span>
+                      <span className="text-sm font-semibold text-[var(--r-text)]">{displayName(friend)}</span>
                       <button
                         disabled={isInviting || isInvited}
                         onClick={() => handleInviteFriend(friend.id)}

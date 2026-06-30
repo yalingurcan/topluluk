@@ -11,9 +11,30 @@ const PREDEFINED_HOBBIES = [
 ]
 
 const PREDEFINED_INTERESTS = [
-  'Teknoloji', 'Yazılım', 'Tasarım', 'Finans', 'Girişimcilik', 
-  'Edebiyat', 'Bilim', 'Tarih', 'Felsefe', 'Doğa', 'Otomobil', 
+  'Teknoloji', 'Yazılım', 'Tasarım', 'Finans', 'Girişimcilik',
+  'Edebiyat', 'Bilim', 'Tarih', 'Felsefe', 'Doğa', 'Otomobil',
   'Yabancı Dil', 'Sağlıklı Yaşam', 'Sanat'
+]
+
+const DEFAULT_PRIVACY = {
+  full_name: 'friends', age: 'friends', gender: 'friends',
+  marital_status: 'friends', children_count: 'friends',
+  hobbies: 'friends', interests: 'friends'
+}
+
+const PRIVACY_OPTIONS = [
+  { value: 'public', label: 'Herkese Açık' },
+  { value: 'friends', label: 'Arkadaşlar' },
+  { value: 'close_friends', label: 'Yakın Arkadaşlar' }
+]
+
+const PRIVACY_ROWS = [
+  { key: 'full_name', label: 'Ad Soyad' },
+  { key: 'age', label: 'Yaş' },
+  { key: 'gender', label: 'Cinsiyet' },
+  { key: 'family', label: 'Medeni Durum & Çocuk', combines: ['marital_status', 'children_count'] },
+  { key: 'hobbies', label: 'Hobiler' },
+  { key: 'interests', label: 'İlgi Alanları' }
 ]
 
 export default function Profile() {
@@ -41,7 +62,8 @@ export default function Profile() {
     age: '',
     gender: '',
     marital_status: '',
-    children_count: ''
+    children_count: '',
+    privacy: DEFAULT_PRIVACY
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -108,10 +130,20 @@ export default function Profile() {
         age: profile.age || '',
         gender: profile.gender || '',
         marital_status: profile.marital_status || '',
-        children_count: profile.children_count !== undefined && profile.children_count !== null ? String(profile.children_count) : ''
+        children_count: profile.children_count !== undefined && profile.children_count !== null ? String(profile.children_count) : '',
+        privacy: { ...DEFAULT_PRIVACY, ...(profile.privacy || {}) }
       })
     }
   }, [profile, editMode])
+
+  function setFieldPrivacy(row, value) {
+    setForm(f => {
+      const keys = row.combines || [row.key]
+      const next = { ...f.privacy }
+      keys.forEach(k => { next[k] = value })
+      return { ...f, privacy: next }
+    })
+  }
 
   async function handleSave(e) {
     e.preventDefault()
@@ -126,7 +158,8 @@ export default function Profile() {
       age: form.age ? parseInt(form.age) : null,
       gender: form.gender,
       marital_status: form.marital_status,
-      children_count: form.children_count ? parseInt(form.children_count) : 0
+      children_count: form.children_count ? parseInt(form.children_count) : 0,
+      privacy: form.privacy
     }
     await supabase.from('profiles').update(updates).eq('id', profile.id)
     await refreshProfile()
@@ -402,6 +435,29 @@ export default function Profile() {
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-[var(--r-border)]">
+              <label className="text-xs font-medium text-[var(--r-text)] block">🔒 Gizlilik Ayarları</label>
+              <p className="text-[11px] text-[var(--r-meta)] -mt-1 mb-1">
+                Kullanıcı adı, şehir ve meslek her zaman herkese açıktır. Aşağıdaki bilgileri kimlerin görebileceğini seçebilirsiniz.
+              </p>
+              <div className="space-y-1.5">
+                {PRIVACY_ROWS.map(row => (
+                  <div key={row.key} className="flex items-center justify-between gap-2 bg-[var(--r-bg)] rounded-xl px-3 py-2">
+                    <span className="text-xs font-medium text-[var(--r-text)]">{row.label}</span>
+                    <select
+                      value={form.privacy[(row.combines || [row.key])[0]] || 'friends'}
+                      onChange={e => setFieldPrivacy(row, e.target.value)}
+                      className="border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      {PRIVACY_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
               </div>
             </div>
 

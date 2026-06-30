@@ -5,6 +5,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Bright orange — matches the logo mark
+        'brand-orange': '#FF4500',
         // Terracotta-brick — primary action color
         primary: {
           50:  '#fff4f0',

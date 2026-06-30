@@ -47,12 +47,12 @@ export default function Feed() {
     const [{ data: postsData }, { data: eventsData }] = await Promise.all([
       supabase
         .from('posts')
-        .select('*, profiles(full_name, username), channels(name, city)')
+        .select('*, profiles(full_name, username, privacy), channels(name, city)')
         .order('created_at', { ascending: false })
         .limit(60),
       supabase
         .from('events')
-        .select('*, profiles!created_by(full_name, username)')
+        .select('*, profiles!created_by(full_name, username, privacy)')
         .order('created_at', { ascending: false })
         .limit(30)
     ])

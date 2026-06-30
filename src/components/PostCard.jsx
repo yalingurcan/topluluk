@@ -43,7 +43,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
     setLoadingComments(true)
     const { data } = await supabase
       .from('comments')
-      .select('*, profiles(full_name, username)')
+      .select('*, profiles(full_name, username, privacy)')
       .eq('post_id', post.id)
       .order('created_at', { ascending: true })
     setComments(data || [])
@@ -59,7 +59,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
     const { data } = await supabase
       .from('comments')
       .insert({ post_id: post.id, author_id: profile.id, body: text, parent_id: parentId })
-      .select('*, profiles(full_name, username)')
+      .select('*, profiles(full_name, username, privacy)')
       .single()
     if (parentId) {
       setActiveReplyId(null)
@@ -187,7 +187,7 @@ export default function PostCard({ post, onDelete, onEdit }) {
                   {/* Ana Yorum */}
                   <div className="flex gap-2 items-start">
                     <div className="w-7 h-7 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-primary-600">{c.profiles?.full_name?.[0]?.toUpperCase()}</span>
+                      <span className="text-xs font-bold text-primary-600">{c.profiles?.username?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">

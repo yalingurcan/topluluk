@@ -113,6 +113,8 @@ Tüm sayfalarda Türkçe karakterler düzeltildi:
 - **PWA Desteği:** Manifest, service worker, iOS/Android özel yükleme akışları (`PWAInstallPrompt.jsx`).
 - **iOS Safari Zoom Fix:** `maximum-scale=1.0` viewport meta.
 - **Mobil Bottom Nav / Desktop Top Nav** navigasyon.
+- **Build Optimizasyonu:** `vite.config.js` içinde React/Router ve Supabase paketleri ayrı production chunk'larına bölündü. `npm run build` uyarısız çalışıyor.
+- **Temizlik Notları:** `MemberMap.jsx` içindeki yinelenen İstanbul koordinatı kaldırıldı. `EventDetail.jsx` paylaşım akışında kullanıcı iptal ettiğinde konsola gereksiz log basılması engellendi; gerçek paylaşım hataları `console.error` ile görünür kalır.
 
 ## Supabase DB Notları
 - `profiles` tablosu: `id, username, full_name, avatar_url, is_admin, status, city, occupation, hobbies, interests, age, gender, email, marital_status, children_count`

@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import MemberMap from '../components/MemberMap'
 
 export default function Members() {
-  const { profile } = useAuth()
+  const { profile, displayName, canSeeField } = useAuth()
   const [members, setMembers] = useState([])
   const [friendships, setFriendships] = useState([])
   const [loading, setLoading] = useState(true)
@@ -254,7 +254,13 @@ export default function Members() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredMembers.map(m => {
             const rel = getFriendshipStatus(m.id)
-            const isAcceptedFriend = rel && rel.status === 'accepted'
+            const canSeeName = canSeeField(m, 'full_name')
+            const canSeeAge = canSeeField(m, 'age')
+            const canSeeGender = canSeeField(m, 'gender')
+            const canSeeFamily = canSeeField(m, 'marital_status') || canSeeField(m, 'children_count')
+            const canSeeHobbies = canSeeField(m, 'hobbies')
+            const canSeeInterests = canSeeField(m, 'interests')
+            const anyExtraHidden = !canSeeAge || !canSeeGender || !canSeeFamily || !canSeeHobbies || !canSeeInterests
 
             return (
               <div key={m.id} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 flex flex-col justify-between hover:bg-[var(--r-hover)] transition-colors duration-150">
@@ -265,7 +271,7 @@ export default function Members() {
                       className="w-12 h-12 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20"
                     >
                       <span className="text-lg font-bold text-primary-600">
-                        {isAcceptedFriend ? m.full_name?.[0]?.toUpperCase() : m.username?.[0]?.toUpperCase()}
+                        {canSeeName ? m.full_name?.[0]?.toUpperCase() : m.username?.[0]?.toUpperCase()}
                       </span>
                     </button>
                     <div className="min-w-0 flex-1 text-left">
@@ -273,74 +279,75 @@ export default function Members() {
                         onClick={() => window.showUserProfile && window.showUserProfile(m.id)}
                         className="font-bold text-[var(--r-text)] text-sm hover:underline block truncate text-left w-full"
                       >
-                        {isAcceptedFriend ? m.full_name : `@${m.username}`}
+                        {displayName(m)}
                       </button>
                       <p className="text-xs text-[var(--r-meta)] truncate">@{m.username}</p>
                     </div>
                   </div>
 
-                  {!isAcceptedFriend ? (
-                    <div className="bg-amber-500/[0.05] border border-amber-500/10 rounded-xl p-3.5 text-center my-4 shrink-0">
-                      <span className="text-xs text-amber-600 font-bold flex items-center justify-center gap-1.5">
-                        🔒 Profil Bilgileri Gizli
-                      </span>
-                      <p className="text-[10px] text-amber-500 mt-1 leading-relaxed">
-                        Gerçek isim ve diğer profil detaylarını görmek için arkadaş olmalısınız.
-                      </p>
+                  <div className="space-y-1.5 text-xs text-[var(--r-meta)] mb-4">
+                    <div className="flex items-center gap-1.5">
+                      <span>📍</span>
+                      <span className="font-semibold text-[var(--r-text)]">{m.city || 'Belirtilmemiş'}</span>
+                      {canSeeAge && m.age && <span className="text-[var(--r-border)]">|</span>}
+                      {canSeeAge && m.age && <span>{m.age} Yaş</span>}
+                      {canSeeGender && m.gender && <span className="text-[var(--r-border)]">|</span>}
+                      {canSeeGender && m.gender && <span>{m.gender}</span>}
                     </div>
-                  ) : (
-                    <div className="space-y-1.5 text-xs text-[var(--r-meta)] mb-4">
-                      <div className="flex items-center gap-1.5">
-                        <span>📍</span>
-                        <span className="font-semibold text-[var(--r-text)]">{m.city || 'Belirtilmemiş'}</span>
-                        {m.age && <span className="text-[var(--r-border)]">|</span>}
-                        {m.age && <span>{m.age} Yaş</span>}
-                        {m.gender && <span className="text-[var(--r-border)]">|</span>}
-                        {m.gender && <span>{m.gender}</span>}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span>💼</span>
-                        <span>{m.occupation || 'Belirtilmemiş'}</span>
-                      </div>
-                      {(m.marital_status || (m.children_count !== undefined && m.children_count !== null)) && (
-                        <div className="flex items-center gap-1.5 text-primary-600 font-medium">
-                          <span>👪</span>
-                          <span>
-                            {[
-                              m.marital_status,
-                              m.children_count > 0 ? `${m.children_count} Çocuklu` : (m.children_count === 0 ? 'Çocuksuz' : null)
-                            ].filter(Boolean).join(' | ')}
-                          </span>
-                        </div>
-                      )}
-
-                      {m.hobbies && (
-                        <div className="pt-2 border-t border-[var(--r-border)]">
-                          <span className="text-[10px] text-[var(--r-meta)] block font-medium">🎨 HOBİLER</span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {m.hobbies.split(',').map((h, i) => (
-                              <span key={i} className="text-[10px] bg-[var(--r-bg)] text-[var(--r-meta)] px-2 py-0.5 rounded-md border border-[var(--r-border)] truncate max-w-[120px]">
-                                {h.trim()}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {m.interests && (
-                        <div className="pt-2 border-t border-[var(--r-border)]">
-                          <span className="text-[10px] text-[var(--r-meta)] block font-medium">🎯 İLGİ ALANLARI</span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {m.interests.split(',').map((int, i) => (
-                              <span key={i} className="text-[10px] bg-primary-500/10 text-primary-600 px-2 py-0.5 rounded-md border border-primary-500/20 truncate max-w-[120px]">
-                                {int.trim()}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                    <div className="flex items-center gap-1.5">
+                      <span>💼</span>
+                      <span>{m.occupation || 'Belirtilmemiş'}</span>
                     </div>
-                  )}
+
+                    {canSeeFamily && (m.marital_status || (m.children_count !== undefined && m.children_count !== null)) && (
+                      <div className="flex items-center gap-1.5 text-primary-600 font-medium">
+                        <span>👪</span>
+                        <span>
+                          {[
+                            m.marital_status,
+                            m.children_count > 0 ? `${m.children_count} Çocuklu` : (m.children_count === 0 ? 'Çocuksuz' : null)
+                          ].filter(Boolean).join(' | ')}
+                        </span>
+                      </div>
+                    )}
+
+                    {canSeeHobbies && m.hobbies && (
+                      <div className="pt-2 border-t border-[var(--r-border)]">
+                        <span className="text-[10px] text-[var(--r-meta)] block font-medium">🎨 HOBİLER</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {m.hobbies.split(',').map((h, i) => (
+                            <span key={i} className="text-[10px] bg-[var(--r-bg)] text-[var(--r-meta)] px-2 py-0.5 rounded-md border border-[var(--r-border)] truncate max-w-[120px]">
+                              {h.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {canSeeInterests && m.interests && (
+                      <div className="pt-2 border-t border-[var(--r-border)]">
+                        <span className="text-[10px] text-[var(--r-meta)] block font-medium">🎯 İLGİ ALANLARI</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {m.interests.split(',').map((int, i) => (
+                            <span key={i} className="text-[10px] bg-primary-500/10 text-primary-600 px-2 py-0.5 rounded-md border border-primary-500/20 truncate max-w-[120px]">
+                              {int.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {anyExtraHidden && (
+                      <div className="bg-amber-500/[0.05] border border-amber-500/10 rounded-xl p-3.5 text-center mt-2">
+                        <span className="text-xs text-amber-600 font-bold flex items-center justify-center gap-1.5">
+                          🔒 Bazı Bilgiler Gizli
+                        </span>
+                        <p className="text-[10px] text-amber-500 mt-1 leading-relaxed">
+                          Bu üye bazı bilgilerini sadece arkadaşlarına veya yakın arkadaşlarına açmış.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Friendship & Message Buttons */}

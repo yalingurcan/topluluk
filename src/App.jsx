@@ -18,6 +18,7 @@ import Friends from './pages/Friends'
 import Messages from './pages/Messages'
 import Cities from './pages/Cities'
 import CityDetail from './pages/CityDetail'
+import Help from './pages/Help'
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { session, profile, loading } = useAuth()
@@ -75,6 +76,7 @@ function AppRoutes() {
         <Route path="/mesajlar" element={<Messages />} />
         <Route path="/sehirler" element={<Cities />} />
         <Route path="/sehirler/:sehirAdi" element={<CityDetail />} />
+        <Route path="/yardim" element={<Help />} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

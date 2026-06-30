@@ -17,7 +17,7 @@ export default function PostDetail() {
     setLoading(true)
     const { data, error } = await supabase
       .from('posts')
-      .select('*, profiles(full_name), channels(name)')
+      .select('*, profiles(full_name, username, privacy), channels(name)')
       .eq('id', id)
       .single()
 

@@ -52,7 +52,7 @@ export default function CreatePostModal({ onClose, onCreated, defaultChannelId =
         channel_id: finalChannelId,
         city: form.city || null
       })
-      .select('*, profiles(full_name), channels(name)')
+      .select('*, profiles(full_name, privacy), channels(name)')
       .single()
     setLoading(false)
     if (error) { setError(error.message); return }

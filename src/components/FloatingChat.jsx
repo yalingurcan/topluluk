@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function FloatingChat() {
-  const { profile } = useAuth()
+  const { profile, displayName, canSeeFullProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -80,7 +80,7 @@ export default function FloatingChat() {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, username')
+        .select('id, full_name, username, privacy')
         .eq('id', userId)
         .single()
       if (data) {
@@ -98,7 +98,7 @@ export default function FloatingChat() {
       // 1. Fetch DM list
       const { data: dmData } = await supabase
         .from('direct_messages')
-        .select('*, sender:profiles!sender_id(id, full_name, username), receiver:profiles!receiver_id(id, full_name, username)')
+        .select('*, sender:profiles!sender_id(id, full_name, username, privacy), receiver:profiles!receiver_id(id, full_name, username, privacy)')
         .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`)
         .order('created_at', { ascending: true })
 
@@ -113,7 +113,7 @@ export default function FloatingChat() {
       // 2. Fetch friends to support starting a new chat
       const { data: friendshipData } = await supabase
         .from('friendships')
-        .select('*, sender:profiles!sender_id(id, full_name, username), receiver:profiles!receiver_id(id, full_name, username)')
+        .select('*, sender:profiles!sender_id(id, full_name, username, privacy), receiver:profiles!receiver_id(id, full_name, username, privacy)')
         .eq('status', 'accepted')
         .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`)
 
@@ -245,7 +245,7 @@ export default function FloatingChat() {
               <div className="flex -space-x-2 mr-1">
                 {recentPartners.map(p => (
                   <div key={p.id} className="w-6 h-6 rounded-full bg-primary-500/10 border-2 border-[var(--r-card)] flex items-center justify-center text-[10px] font-bold text-primary-600">
-                    {p.full_name?.[0]?.toUpperCase()}
+                    {(canSeeFullProfile(p.id) ? p.full_name : p.username)?.[0]?.toUpperCase()}
                   </div>
                 ))}
               </div>
@@ -281,10 +281,10 @@ export default function FloatingChat() {
                 {activePartner ? (
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20 text-xs font-bold text-primary-600">
-                      {activePartner.full_name?.[0]?.toUpperCase()}
+                      {(canSeeFullProfile(activePartner.id) ? activePartner.full_name : activePartner.username)?.[0]?.toUpperCase()}
                     </div>
                     <div>
-                      <h4 className="font-bold text-[var(--r-text)] text-xs leading-tight">{activePartner.full_name}</h4>
+                      <h4 className="font-bold text-[var(--r-text)] text-xs leading-tight">{displayName(activePartner)}</h4>
                       <p className="text-[9px] text-[var(--r-meta)]">@{activePartner.username}</p>
                     </div>
                   </div>
@@ -362,10 +362,10 @@ export default function FloatingChat() {
                         className="w-full p-2 rounded-xl hover:bg-primary-500/[0.06] border border-[var(--r-border)] flex items-center gap-2.5 transition-all text-left"
                       >
                         <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20 text-xs font-bold text-primary-600">
-                          {friend.full_name?.[0]?.toUpperCase()}
+                          {(canSeeFullProfile(friend) ? friend.full_name : friend.username)?.[0]?.toUpperCase()}
                         </div>
                         <div>
-                          <h4 className="font-bold text-[var(--r-text)] text-xs">{friend.full_name}</h4>
+                          <h4 className="font-bold text-[var(--r-text)] text-xs">{displayName(friend)}</h4>
                           <p className="text-[9px] text-[var(--r-meta)]">@{friend.username}</p>
                         </div>
                       </button>
@@ -465,11 +465,11 @@ export default function FloatingChat() {
                         className="w-full p-3.5 text-left hover:bg-[var(--r-hover)]/50 transition-colors flex gap-2.5 items-center"
                       >
                         <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20 text-xs font-bold text-primary-600">
-                          {c.partner.full_name?.[0]?.toUpperCase()}
+                          {(canSeeFullProfile(c.partner.id) ? c.partner.full_name : c.partner.username)?.[0]?.toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-baseline mb-0.5">
-                            <h4 className="font-bold text-[var(--r-text)] text-xs truncate">{c.partner.full_name}</h4>
+                            <h4 className="font-bold text-[var(--r-text)] text-xs truncate">{displayName(c.partner)}</h4>
                             <span className="text-[9px] text-[var(--r-meta)] shrink-0">{timeStr}</span>
                           </div>
                           <p className="text-[11px] text-[var(--r-meta)] truncate">{c.lastMessage.body}</p>
