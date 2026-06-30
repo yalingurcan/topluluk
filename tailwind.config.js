@@ -5,18 +5,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Reddit OrangeRed — primary action color (same in both modes)
+        // Terracotta-brick — primary action color
         primary: {
-          50:  '#fff3ee',
-          100: '#ffe2d0',
-          200: '#ffc09a',
-          300: '#ff9563',
-          400: '#ff6a30',
-          500: '#FF4500',
-          600: '#e03d00',
-          700: '#b83200',
+          50:  '#fff4f0',
+          100: '#ffe4d9',
+          200: '#ffc4aa',
+          300: '#f99a76',
+          400: '#e96848',
+          500: '#C8432B',
+          600: '#B03825',
+          700: '#8F2D1E',
         },
-        // German Gold — secondary accent (bookmarks, highlights)
+        // Deep navy — structural / text accent
+        navy: {
+          50:  '#EEF2FF',
+          100: '#C7D2FE',
+          500: '#2E4080',
+          700: '#1A2744',
+          900: '#0F1A30',
+        },
+        // Warm gold — secondary accent
         gold: {
           400: '#ffd700',
           500: '#FFD635',

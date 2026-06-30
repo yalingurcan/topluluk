@@ -116,7 +116,7 @@ export default function Events() {
     <div className="pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex items-center justify-between sm:justify-start gap-4">
-          <h1 className="text-xl font-bold text-[var(--r-text)]">Etkinlikler</h1>
+          <h1 className="text-2xl font-bold text-[var(--r-text)]">Etkinlikler</h1>
           <div className="flex bg-[var(--r-hover)]/80 rounded-xl p-0.5 border border-[var(--r-border)]/50">
             <button
               type="button"
@@ -164,7 +164,19 @@ export default function Events() {
           <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : events.length === 0 ? (
-        <div className="text-center py-16 text-[var(--r-meta)] text-sm">Henüz etkinlik yok.</div>
+        <div className="text-center py-20 text-[var(--r-meta)] bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)]">
+          <svg className="w-10 h-10 mx-auto mb-3 opacity-25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p className="text-sm font-medium">Henüz etkinlik yok</p>
+          <p className="text-xs mt-1 opacity-70">İlk etkinliği sen oluştur.</p>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="mt-4 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold px-5 py-2 rounded-xl transition-colors"
+          >
+            Etkinlik Oluştur
+          </button>
+        </div>
       ) : (
         <div className="space-y-4">
           {events.map(ev => (

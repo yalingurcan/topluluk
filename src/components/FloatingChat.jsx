@@ -228,9 +228,13 @@ export default function FloatingChat() {
   if (isMessagesPage) return null
 
   return (
-    <div className={`fixed bottom-0 right-4 md:right-8 z-40 bg-[var(--r-card)] border border-[var(--r-border)]/80 shadow-2xl rounded-t-2xl flex flex-col transition-all duration-300 ease-in-out ${
-      isOpen ? 'h-[460px] w-80 md:w-96' : 'h-12 w-64 md:w-72 cursor-pointer hover:bg-[var(--r-hover)]'
-    }`} onClick={!isOpen ? toggleOpen : undefined}>
+    <div
+      className={`fixed bottom-0 right-4 md:right-8 z-40 bg-[var(--r-card)] border border-[var(--r-border)] rounded-t-2xl flex flex-col transition-all duration-300 ease-in-out ${
+        isOpen ? 'h-[460px] w-80 md:w-96' : 'h-12 w-64 md:w-72 cursor-pointer hover:bg-[var(--r-hover)]'
+      }`}
+      style={{ boxShadow: '0 -4px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)' }}
+      onClick={!isOpen ? toggleOpen : undefined}
+    >
       
       {/* Collapsed Header */}
       {!isOpen ? (

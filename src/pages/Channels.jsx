@@ -85,7 +85,7 @@ export default function Channels() {
   return (
     <div className="pb-8">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-[var(--r-text)]">Konular</h1>
+        <h1 className="text-2xl font-bold text-[var(--r-text)]">Konular</h1>
         {profile?.is_admin && (
           <button
             onClick={() => setShowCreate(true)}
@@ -101,10 +101,10 @@ export default function Channels() {
 
       <button
         onClick={() => setShowCreatePost(true)}
-        className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 mb-4 shadow-sm"
+        className="w-full border border-primary-500/40 text-primary-600 hover:bg-primary-500/[0.06] py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 mb-4"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
         </svg>
         Gönderi Oluştur
       </button>

@@ -97,7 +97,7 @@ export default function Cities() {
   return (
     <div className="pb-8">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[var(--r-text)] mb-1">Şehirler</h1>
+        <h1 className="text-2xl font-bold text-[var(--r-text)] mb-1">Şehirler</h1>
         <p className="text-sm text-[var(--r-meta)]">
           Şehrindeki topluluğu keşfet — üyeler, etkinlikler ve konular.
         </p>
@@ -161,8 +161,8 @@ export default function Cities() {
                   <CityIcon />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 pr-6">
-                    <h3 className="font-semibold text-[var(--r-text)] text-sm truncate group-hover:text-primary-600 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-[var(--r-text)] text-sm group-hover:text-primary-600 transition-colors leading-snug">
                       {city.name}
                     </h3>
                     <button

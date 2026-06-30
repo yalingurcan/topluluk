@@ -2,30 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Reddit Light Mode ── */
+/* ── Light Mode ── */
 :root {
-  --r-bg:           #FFFFFF;
+  --r-bg:           #FAFAF9;
   --r-card:         #FFFFFF;
   --r-nav:          #FFFFFF;
-  --r-border:       #EDEFF1;
-  --r-text:         #1C1C1C;
-  --r-meta:         #878A8C;
-  --r-hover:        #F6F7F8;
-  --r-input:        #F6F7F8;
-  --r-input-border: #EDEFF1;
+  --r-border:       #E8E4DF;
+  --r-text:         #1A2744;
+  --r-meta:         #7A7E85;
+  --r-hover:        #F4F1EE;
+  --r-input:        #F4F1EE;
+  --r-input-border: #E8E4DF;
 }
 
-/* ── Reddit Dark Mode ── */
+/* ── Dark Mode ── */
 html.dark {
-  --r-bg:           #0D0D0E;
-  --r-card:         #1A1A1B;
-  --r-nav:          #1A1A1B;
-  --r-border:       #2D2D2E;
-  --r-text:         #D7DADC;
-  --r-meta:         #818384;
-  --r-hover:        #313135;
-  --r-input:        #1A1A1B;
-  --r-input-border: #2D2D2E;
+  --r-bg:           #0E1117;
+  --r-card:         #161C26;
+  --r-nav:          #161C26;
+  --r-border:       #263044;
+  --r-text:         #E2E8F0;
+  --r-meta:         #7A8599;
+  --r-hover:        #1E2A3A;
+  --r-input:        #161C26;
+  --r-input-border: #263044;
 }
 
 @layer base {
@@ -35,8 +35,14 @@ html.dark {
   body {
     background-color: var(--r-bg);
     color: var(--r-text);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     transition: background-color 0.2s ease, color 0.2s ease;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    font-weight: 700;
   }
 }
 
