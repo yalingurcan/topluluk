@@ -66,28 +66,28 @@ export default function PWAInstallPrompt() {
   return (
     <>
       {/* Banner */}
-      <div className="lg:hidden fixed bottom-16 left-4 right-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white p-4 rounded-xl shadow-xl z-50 flex items-center justify-between border border-white/10 animate-fade-in">
+      <div className="lg:hidden fixed bottom-16 left-4 right-4 bg-[var(--r-card)] border border-[var(--r-border)] p-3.5 rounded-xl z-50 flex items-center justify-between" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.10)' }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-9 h-9 bg-primary-500/10 rounded-lg flex items-center justify-center shrink-0">
+            <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
           </div>
-          <div className="pr-2">
-            <h4 className="font-semibold text-xs">Alamancı'yı Uygulama Olarak Yükle</h4>
-            <p className="text-[10px] text-white/80">Tek tıkla ana ekranına ekle ve hızlıca eriş!</p>
+          <div>
+            <h4 className="font-semibold text-xs text-[var(--r-text)]">Uygulamayı yükle</h4>
+            <p className="text-[10px] text-[var(--r-meta)]">Ana ekrana ekle, hızlıca eriş</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button 
-            onClick={handleInstallClick} 
-            className="bg-white text-primary-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-opacity-95 transition-all shadow-sm shrink-0"
+          <button
+            onClick={handleInstallClick}
+            className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0"
           >
             Yükle
           </button>
-          <button 
-            onClick={handleDismiss} 
-            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/80 hover:text-white"
+          <button
+            onClick={handleDismiss}
+            className="p-1.5 text-[var(--r-meta)] hover:text-[var(--r-text)] hover:bg-[var(--r-hover)] rounded-lg transition-colors"
             aria-label="Kapat"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
