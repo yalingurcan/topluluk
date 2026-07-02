@@ -46,7 +46,7 @@ serve(async (req) => {
         subject: 'Alamancı Üyeliğiniz Onaylandı! 🎉',
         htmlContent: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; rounded: 12px;">
-            <h2 style="color: #4f46e5;">Merhaba ${full_name || ''},</h2>
+            <h2 style="color: #C8432B;">Merhaba ${full_name || ''},</h2>
             <p style="font-size: 16px; color: #374151; line-height: 1.6;">
               Alamancı topluluğuna yaptığınız üyelik başvurusu incelenmiş ve <strong>onaylanmıştır</strong>! 🎉
             </p>
@@ -54,7 +54,7 @@ serve(async (req) => {
               Artık sisteme giriş yaparak profili güncelleyebilir, etkinliklere katılabilir ve diğer üyelerle iletişime geçebilirsiniz.
             </p>
             <div style="margin: 30px 0; text-align: center;">
-              <a href="https://alamanci.netlify.app" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+              <a href="https://alamanci.netlify.app" style="background-color: #C8432B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
                 Giriş Yap ve Keşfet
               </a>
             </div>

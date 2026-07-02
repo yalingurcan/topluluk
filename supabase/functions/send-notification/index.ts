@@ -50,11 +50,58 @@ serve(async (req) => {
       throw new Error('Neither RESEND_API_KEY nor BREVO_API_KEY is configured in Supabase Secrets')
     }
 
+    const ADMIN_EMAIL = 'yalingurcanmd@gmail.com'
+
+    async function dispatchEmail(toEmail: string, toName: string | undefined, subject: string, htmlContent: string) {
+      if (resendApiKey) {
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: 'Alamancı <info@alamanci.eu>',
+            to: toEmail,
+            subject,
+            html: htmlContent
+          })
+        })
+        const result = await response.json()
+        if (!response.ok) {
+          throw new Error(`Resend Error: ${JSON.stringify(result)}`)
+        }
+        console.log('Email sent successfully via Resend:', result)
+        return result
+      } else {
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'api-key': brevoApiKey!,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            sender: { name: 'Alamancı', email: 'info@eylaconsulting.com' },
+            to: [{ email: toEmail, name: toName || toEmail }],
+            subject,
+            htmlContent
+          })
+        })
+        const result = await response.json()
+        if (!response.ok) {
+          throw new Error(`Brevo Error: ${JSON.stringify(result)}`)
+        }
+        console.log('Email sent successfully via Brevo:', result)
+        return result
+      }
+    }
+
     let subject = ''
     let htmlContent = ''
 
     const appUrl = 'https://alamanci.netlify.app'
-    const brandColor = '#4f46e5' // primary color
+    const brandColor = '#C8432B' // primary color (terracotta)
 
     // Generate Beautiful HTML Templates
     switch (type) {
@@ -181,49 +228,34 @@ serve(async (req) => {
         throw new Error(`Unsupported notification type: ${type}`)
     }
 
-    // Send Email Dispatch
-    let emailSentResult;
-    if (resendApiKey) {
-      // Send via Resend
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: 'Alamancı <info@alamanci.eu>',
-          to: email,
-          subject: subject,
-          html: htmlContent
-        })
-      })
-      emailSentResult = await response.json()
-      if (!response.ok) {
-        throw new Error(`Resend Error: ${JSON.stringify(emailSentResult)}`)
+    const emailSentResult = await dispatchEmail(email, full_name, subject, htmlContent)
+
+    // Also notify the admin whenever a new membership application comes in
+    if (type === 'pending') {
+      const adminSubject = `Yeni Üyelik Başvurusu: ${full_name || email} ⌛`
+      const adminHtmlContent = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 12px;">
+          <h2 style="color: ${brandColor};">Yeni Bir Üyelik Başvurusu Var 📥</h2>
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            <strong>${full_name || 'Bir kullanıcı'}</strong> (${email}) Alamancı topluluğuna üyelik için başvurdu ve onayınızı bekliyor.
+          </p>
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="${appUrl}/admin" style="background-color: ${brandColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+              Başvuruyu İncele ➔
+            </a>
+          </div>
+          <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
+          <p style="font-size: 12px; color: #9ca3af; text-align: center;">
+            Bu e-posta Alamancı Topluluğu tarafından otomatik olarak gönderilmiştir.
+          </p>
+        </div>
+      `
+      try {
+        await dispatchEmail(ADMIN_EMAIL, 'Admin', adminSubject, adminHtmlContent)
+      } catch (adminEmailError) {
+        // Don't fail the whole request if only the admin copy fails to send
+        console.error('Failed to send admin notification email:', adminEmailError.message)
       }
-      console.log('Email sent successfully via Resend:', emailSentResult)
-    } else {
-      // Send via Brevo
-      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'accept': 'application/json',
-          'api-key': brevoApiKey!,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-          sender: { name: 'Alamancı', email: 'info@eylaconsulting.com' },
-          to: [{ email, name: full_name || email }],
-          subject: subject,
-          htmlContent: htmlContent
-        })
-      })
-      emailSentResult = await response.json()
-      if (!response.ok) {
-        throw new Error(`Brevo Error: ${JSON.stringify(emailSentResult)}`)
-      }
-      console.log('Email sent successfully via Brevo:', emailSentResult)
     }
 
     return new Response(
