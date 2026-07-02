@@ -99,7 +99,7 @@ export default function Layout() {
         </div>
       </main>
       {profile && profile.status === 'approved' && <FloatingChat />}
-      {profile && profile.status === 'approved' && <WelcomeModal />}
+      {profile && profile.status === 'approved' && !(location.pathname === '/profil' && location.state?.welcome) && <WelcomeModal />}
       <BottomNav />
       <PWAInstallPrompt />
       <UserProfileModal />
