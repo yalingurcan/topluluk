@@ -153,8 +153,16 @@ export default function UserProfileModal() {
                   </span>
                 </div>
                 <div className="min-w-0">
-                  <h2 className="font-bold text-[var(--r-text)] text-base truncate">
+                  <h2 className="font-bold text-[var(--r-text)] text-base truncate flex items-center gap-1.5">
                     {displayName(userProfile)}
+                    {userProfile.is_admin && (
+                      <span className="inline-flex items-center gap-0.5 bg-primary-500/10 text-primary-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-primary-500/20 shrink-0">
+                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2l8 3.5v6c0 5-3.5 8.5-8 10.5-4.5-2-8-5.5-8-10.5v-6L12 2z" />
+                        </svg>
+                        Admin
+                      </span>
+                    )}
                   </h2>
                   <p className="text-xs text-[var(--r-meta)] truncate">@{userProfile.username}</p>
                 </div>
@@ -184,13 +192,13 @@ export default function UserProfileModal() {
                   </div>
                 )}
                 {(canSeeField(userProfile, 'marital_status') || canSeeField(userProfile, 'children_count')) &&
-                  (userProfile.marital_status || userProfile.children_count !== undefined) && (
+                  (userProfile.marital_status || userProfile.children_count > 0) && (
                   <div className="flex items-center justify-between border-b border-[var(--r-border)] pb-2">
                     <span className="text-[var(--r-meta)] text-xs">👪 AİLE DURUMU</span>
                     <span className="font-semibold text-[var(--r-text)]">
                       {[
                         userProfile.marital_status,
-                        userProfile.children_count > 0 ? `${userProfile.children_count} Çocuklu` : (userProfile.children_count === 0 ? 'Çocuksuz' : null)
+                        userProfile.children_count > 0 ? `${userProfile.children_count} Çocuklu` : null
                       ].filter(Boolean).join(' | ')}
                     </span>
                   </div>

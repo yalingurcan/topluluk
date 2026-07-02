@@ -94,6 +94,82 @@ export default function Cities() {
   const isMyCity = (cityName) =>
     profile?.city && cityName.toLowerCase() === profile.city.toLowerCase()
 
+  const myCities = filteredCities.filter(c => followedCities.includes(c.name.toLowerCase()))
+  const exploreCities = filteredCities.filter(c => !followedCities.includes(c.name.toLowerCase()))
+
+  const renderCityCard = (city) => (
+    <Link
+      key={city.name}
+      to={`/sehirler/${encodeURIComponent(city.name)}`}
+      id={`city-card-${city.name.replace(/\s+/g, '-').toLowerCase()}`}
+      className={`group bg-[var(--r-card)] rounded-2xl border shadow-sm p-4 hover:shadow-md hover:border-primary-500/30 transition-all duration-200 ${
+        isMyCity(city.name)
+          ? 'border-primary-500/40 ring-1 ring-primary-500/20'
+          : 'border-[var(--r-border)]'
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+          isMyCity(city.name)
+            ? 'bg-primary-500/[0.15] text-primary-600'
+            : 'bg-[var(--r-hover)] text-[var(--r-meta)] group-hover:bg-primary-500/10 group-hover:text-primary-500 transition-colors'
+        }`}>
+          <CityIcon />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold text-[var(--r-text)] text-sm group-hover:text-primary-600 transition-colors leading-snug">
+              {city.name}
+            </h3>
+            <button
+              onClick={(e) => toggleFollow(city.name, e)}
+              className={`text-[10px] px-2.5 py-1 rounded-full font-bold transition-all border shrink-0 ${
+                followedCities.includes(city.name.toLowerCase())
+                  ? 'bg-primary-500/10 text-primary-600 border-primary-500/20 hover:bg-primary-500/[0.15]'
+                  : 'bg-[var(--r-card)] text-[var(--r-meta)] border-[var(--r-border)] hover:border-primary-500/30 hover:text-primary-600'
+              }`}
+            >
+              {followedCities.includes(city.name.toLowerCase()) ? 'Katıldın ✓' : 'Katıl +'}
+            </button>
+          </div>
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <span className="flex items-center gap-1 text-xs text-[var(--r-meta)]">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="font-medium text-[var(--r-text)]">{city.memberCount}</span> üye
+            </span>
+            {city.eventCount > 0 && (
+              <span className="flex items-center gap-1 text-xs text-[var(--r-meta)]">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="font-medium text-[var(--r-text)]">{city.eventCount}</span> etkinlik
+              </span>
+            )}
+            {city.channelCount > 0 && (
+              <span className="flex items-center gap-1 text-xs text-[var(--r-meta)]">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span className="font-medium text-[var(--r-text)]">{city.channelCount}</span> konu
+              </span>
+            )}
+          </div>
+        </div>
+        <svg
+          className="w-4 h-4 text-[var(--r-border)] group-hover:text-primary-500 transition-colors shrink-0 self-center"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </Link>
+  )
+
   return (
     <div className="pb-8">
       <div className="mb-6">
@@ -140,79 +216,24 @@ export default function Cities() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {filteredCities.map(city => (
-            <Link
-              key={city.name}
-              to={`/sehirler/${encodeURIComponent(city.name)}`}
-              id={`city-card-${city.name.replace(/\s+/g, '-').toLowerCase()}`}
-              className={`group bg-[var(--r-card)] rounded-2xl border shadow-sm p-4 hover:shadow-md hover:border-primary-500/30 transition-all duration-200 ${
-                isMyCity(city.name)
-                  ? 'border-primary-500/40 ring-1 ring-primary-500/20'
-                  : 'border-[var(--r-border)]'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                  isMyCity(city.name)
-                    ? 'bg-primary-500/[0.15] text-primary-600'
-                    : 'bg-[var(--r-hover)] text-[var(--r-meta)] group-hover:bg-primary-500/10 group-hover:text-primary-500 transition-colors'
-                }`}>
-                  <CityIcon />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-[var(--r-text)] text-sm group-hover:text-primary-600 transition-colors leading-snug">
-                      {city.name}
-                    </h3>
-                    <button
-                      onClick={(e) => toggleFollow(city.name, e)}
-                      className={`text-[10px] px-2.5 py-1 rounded-full font-bold transition-all border shrink-0 ${
-                        followedCities.includes(city.name.toLowerCase())
-                          ? 'bg-primary-500/10 text-primary-600 border-primary-500/20 hover:bg-primary-500/[0.15]'
-                          : 'bg-[var(--r-card)] text-[var(--r-meta)] border-[var(--r-border)] hover:border-primary-500/30 hover:text-primary-600'
-                      }`}
-                    >
-                      {followedCities.includes(city.name.toLowerCase()) ? 'Takip Ediyor ✓' : 'Takip Et +'}
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2 flex-wrap">
-                    <span className="flex items-center gap-1 text-xs text-[var(--r-meta)]">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="font-medium text-[var(--r-text)]">{city.memberCount}</span> üye
-                    </span>
-                    {city.eventCount > 0 && (
-                      <span className="flex items-center gap-1 text-xs text-[var(--r-meta)]">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span className="font-medium text-[var(--r-text)]">{city.eventCount}</span> etkinlik
-                      </span>
-                    )}
-                    {city.channelCount > 0 && (
-                      <span className="flex items-center gap-1 text-xs text-[var(--r-meta)]">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        <span className="font-medium text-[var(--r-text)]">{city.channelCount}</span> konu
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <svg
-                  className="w-4 h-4 text-[var(--r-border)] group-hover:text-primary-500 transition-colors shrink-0 self-center"
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+        <div className="space-y-6">
+          {myCities.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold text-[var(--r-meta)] uppercase tracking-wider px-1">Şehirlerim</h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {myCities.map(renderCityCard)}
               </div>
-            </Link>
-          ))}
+            </div>
+          )}
+
+          {exploreCities.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold text-[var(--r-meta)] uppercase tracking-wider px-1">Keşfet</h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {exploreCities.map(renderCityCard)}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

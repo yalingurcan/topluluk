@@ -458,7 +458,20 @@ alter table public.profiles
     "gender": "friends",
     "marital_status": "friends",
     "children_count": "friends",
-    "hobbies": "friends",
-    "interests": "friends"
+    "hobbies": "public",
+    "interests": "public"
   }'::jsonb;
+
+-- Hobbies/interests are now public by default going forward; flip existing profiles
+-- that are still sitting on the old "friends" default (no-op for anyone who already
+-- explicitly chose something else for these two fields).
+update public.profiles
+set privacy = privacy
+  || jsonb_build_object('hobbies', 'public')
+where privacy->>'hobbies' = 'friends';
+
+update public.profiles
+set privacy = privacy
+  || jsonb_build_object('interests', 'public')
+where privacy->>'interests' = 'friends';
 

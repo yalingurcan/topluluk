@@ -3,6 +3,14 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  server: {
+    // This project lives in a Google Drive-synced folder, whose filesystem doesn't
+    // reliably emit change events — polling ensures edits are actually picked up.
+    watch: {
+      usePolling: true,
+      interval: 300
+    }
+  },
   build: {
     rollupOptions: {
       output: {

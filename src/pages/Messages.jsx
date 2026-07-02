@@ -1,16 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Messages() {
   const { profile, displayName, canSeeFullProfile } = useAuth()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const targetUserId = searchParams.get('user')
 
   const [messages, setMessages] = useState([])
   const [friends, setFriends] = useState([])
+  const [friendships, setFriendships] = useState([])
   const [messageRequests, setMessageRequests] = useState([])
+  const [sendingFriendRequest, setSendingFriendRequest] = useState(false)
   const [activeSection, setActiveSection] = useState('chats') // 'chats' or 'requests'
   const [loading, setLoading] = useState(true)
   const [selectedPartnerId, setSelectedPartnerId] = useState(null)
@@ -19,6 +22,7 @@ export default function Messages() {
   const [showNewChatModal, setShowNewChatModal] = useState(false)
   const [allUsers, setAllUsers] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [warningDismissed, setWarningDismissed] = useState(false)
 
   useEffect(() => {
     if (showNewChatModal) {
@@ -29,7 +33,7 @@ export default function Messages() {
   async function fetchAllUsers() {
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, username')
+      .select('id, full_name, username, privacy')
       .eq('status', 'approved')
       .neq('id', profile.id)
     
@@ -102,6 +106,11 @@ export default function Messages() {
     scrollToBottom()
   }, [messages, selectedPartnerId])
 
+  // Reset the dismissed-warning state whenever the user switches to a different conversation
+  useEffect(() => {
+    setWarningDismissed(false)
+  }, [selectedPartnerId])
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -111,7 +120,7 @@ export default function Messages() {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, username')
+        .select('id, full_name, username, privacy')
         .eq('id', userId)
         .single()
       if (data) {
@@ -142,16 +151,18 @@ export default function Messages() {
         if (m.receiver) profileCache.current[m.receiver.id] = m.receiver
       })
 
-      // 2. Fetch friends to support starting a new chat
+      // 2. Fetch all friendships (any status) to support starting a new chat and showing friend-request state
       const { data: friendshipData } = await supabase
         .from('friendships')
         .select('*, sender:profiles!sender_id(id, full_name, username, privacy), receiver:profiles!receiver_id(id, full_name, username, privacy)')
-        .eq('status', 'accepted')
         .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`)
 
-      const resolvedFriends = (friendshipData || []).map(f => {
-        return f.sender_id === profile.id ? f.receiver : f.sender
-      }).filter(Boolean)
+      setFriendships(friendshipData || [])
+
+      const resolvedFriends = (friendshipData || [])
+        .filter(f => f.status === 'accepted')
+        .map(f => (f.sender_id === profile.id ? f.receiver : f.sender))
+        .filter(Boolean)
 
       setFriends(resolvedFriends)
 
@@ -170,10 +181,46 @@ export default function Messages() {
   }
 
   const getRequestFor = (partnerId) => {
-    return messageRequests.find(r => 
+    return messageRequests.find(r =>
       (r.sender_id === profile.id && r.receiver_id === partnerId) ||
       (r.sender_id === partnerId && r.receiver_id === profile.id)
     )
+  }
+
+  const getFriendshipFor = (partnerId) => {
+    return friendships.find(f =>
+      (f.sender_id === profile.id && f.receiver_id === partnerId) ||
+      (f.sender_id === partnerId && f.receiver_id === profile.id)
+    )
+  }
+
+  async function sendFriendRequest(partnerId) {
+    if (sendingFriendRequest) return
+    setSendingFriendRequest(true)
+    try {
+      const { data } = await supabase
+        .from('friendships')
+        .insert({ sender_id: profile.id, receiver_id: partnerId, status: 'pending' })
+        .select()
+        .single()
+      if (data) {
+        setFriendships(f => [...f, data])
+      }
+    } catch (e) {
+      console.error('Failed to send friend request:', e)
+    } finally {
+      setSendingFriendRequest(false)
+    }
+  }
+
+  async function acceptFriendRequest(partnerId) {
+    const { error } = await supabase
+      .from('friendships')
+      .update({ status: 'accepted' })
+      .eq('sender_id', partnerId)
+      .eq('receiver_id', profile.id)
+
+    if (!error) fetchData()
   }
 
   const isPartnerAccepted = (partnerId) => {
@@ -184,7 +231,7 @@ export default function Messages() {
 
   async function handleUrlTargetUser(userId) {
     if (userId === profile.id) {
-      setSearchParams({})
+      setSearchParams({}, { replace: true })
       return
     }
 
@@ -199,7 +246,7 @@ export default function Messages() {
     }
 
     setSelectedPartnerId(userId)
-    setSearchParams({})
+    setSearchParams({}, { replace: true })
   }
 
   // Group messages by partner ID to render conversations sidebar
@@ -240,10 +287,12 @@ export default function Messages() {
         // Only show pending requests where the current user is the receiver
         return !accepted && req && req.receiver_id === profile.id && req.status === 'pending'
       } else {
-        // Show accepted, OR pending requests sent by the current user, OR messages with no request record (fallback)
+        // Show accepted, OR pending requests sent by the current user, OR messages with no request record (fallback),
+        // OR the conversation the user just opened (e.g. via "Mesaj Gönder" on a member card) before any message/request exists yet
         const isMyPendingRequest = req && req.sender_id === profile.id && req.status === 'pending'
         const hasNoRequestButHasMessages = !req && c.messages.length > 0
-        return accepted || isMyPendingRequest || hasNoRequestButHasMessages
+        const isNewlyOpenedTarget = !req && c.messages.length === 0 && c.partner.id === selectedPartnerId
+        return accepted || isMyPendingRequest || hasNoRequestButHasMessages || isNewlyOpenedTarget
       }
     }).sort(
       (a, b) => new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at)
@@ -338,7 +387,18 @@ export default function Messages() {
   return (
     <div className="h-[calc(100dvh-160px)] md:h-[calc(100vh-100px)] flex flex-col">
       <div className="flex justify-between items-center mb-4 shrink-0">
-        <h1 className="text-xl font-bold text-[var(--r-text)]">Mesajlar</h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-1.5 -ml-1.5 rounded-lg text-[var(--r-meta)] hover:text-[var(--r-text)] hover:bg-[var(--r-hover)] transition-colors"
+            title="Geri Dön"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-xl font-bold text-[var(--r-text)]">Mesajlar</h1>
+        </div>
         <button
           onClick={() => setShowNewChatModal(true)}
           className="bg-primary-500/10 hover:bg-primary-500/[0.15] text-primary-600 px-3.5 py-2 rounded-xl text-xs font-semibold border border-primary-500/20 transition-colors"
@@ -407,7 +467,7 @@ export default function Messages() {
                   >
                     <div className="w-10 h-10 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20">
                       <span className="text-sm font-bold text-primary-600">
-                        {(canSeeFullProfile(c.partner.id) ? c.partner.full_name : c.partner.username)?.[0]?.toUpperCase()}
+                        {(canSeeFullProfile(c.partner) ? c.partner.full_name : c.partner.username)?.[0]?.toUpperCase()}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
@@ -442,7 +502,7 @@ export default function Messages() {
                 </button>
                 <div className="w-9 h-9 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
                   <span className="text-sm font-bold text-primary-600">
-                    {(canSeeFullProfile(activePartner.id) ? activePartner.full_name : activePartner.username)?.[0]?.toUpperCase()}
+                    {(canSeeFullProfile(activePartner) ? activePartner.full_name : activePartner.username)?.[0]?.toUpperCase()}
                   </span>
                 </div>
                 <div>
@@ -450,6 +510,56 @@ export default function Messages() {
                   <p className="text-[10px] text-[var(--r-meta)] leading-none mt-0.5">@{activePartner.username}</p>
                 </div>
               </div>
+
+              {/* First-message-to-a-non-friend warning */}
+              {!isPartnerAccepted(selectedPartnerId) && !getRequestFor(selectedPartnerId) && !warningDismissed && (
+                <div className="mx-3 mt-3 shrink-0 bg-amber-500/[0.06] border border-amber-500/15 rounded-xl px-3.5 py-3 flex items-start gap-2.5">
+                  <span className="text-base leading-none mt-0.5">⚠️</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] text-amber-600 leading-relaxed">
+                      <span className="font-semibold">{displayName(activePartner)}</span> ile arkadaş değilsiniz. Göndereceğiniz ilk mesaj bir{' '}
+                      <span className="font-semibold">"Mesaj İsteği"</span> olarak İstekler kutusuna düşecek; karşı taraf mesajlaşmayı kabul etmeyebilir veya reddedebilir.
+                    </p>
+                    {(() => {
+                      const fr = getFriendshipFor(selectedPartnerId)
+                      if (!fr) {
+                        return (
+                          <button
+                            onClick={() => sendFriendRequest(selectedPartnerId)}
+                            disabled={sendingFriendRequest}
+                            className="mt-2 text-[11px] font-bold text-amber-700 bg-amber-500/15 hover:bg-amber-500/25 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
+                          >
+                            {sendingFriendRequest ? 'Gönderiliyor...' : '+ Arkadaşlık İsteği Gönder'}
+                          </button>
+                        )
+                      }
+                      if (fr.status === 'pending' && fr.sender_id === profile.id) {
+                        return <p className="mt-2 text-[11px] font-semibold text-amber-700">Arkadaşlık isteği gönderildi, bekleniyor.</p>
+                      }
+                      if (fr.status === 'pending' && fr.receiver_id === profile.id) {
+                        return (
+                          <button
+                            onClick={() => acceptFriendRequest(selectedPartnerId)}
+                            className="mt-2 text-[11px] font-bold text-white bg-primary-600 hover:bg-primary-700 px-3 py-1.5 rounded-lg transition-colors"
+                          >
+                            Arkadaşlık İsteğini Kabul Et
+                          </button>
+                        )
+                      }
+                      return null
+                    })()}
+                  </div>
+                  <button
+                    onClick={() => setWarningDismissed(true)}
+                    className="p-1 -mt-1 -mr-1 text-amber-500/70 hover:text-amber-700 hover:bg-amber-500/10 rounded-lg transition-colors shrink-0"
+                    title="Kapat"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
 
               {/* Messages History */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[var(--r-bg)]/10">
@@ -601,7 +711,7 @@ export default function Messages() {
                   >
                     <div className="w-9 h-9 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
                       <span className="text-sm font-bold text-primary-600">
-                        {(canSeeFullProfile(user.id) ? user.full_name : user.username)?.[0]?.toUpperCase()}
+                        {(canSeeFullProfile(user) ? user.full_name : user.username)?.[0]?.toUpperCase()}
                       </span>
                     </div>
                     <div>

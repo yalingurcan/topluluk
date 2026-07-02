@@ -245,7 +245,7 @@ export default function FloatingChat() {
               <div className="flex -space-x-2 mr-1">
                 {recentPartners.map(p => (
                   <div key={p.id} className="w-6 h-6 rounded-full bg-primary-500/10 border-2 border-[var(--r-card)] flex items-center justify-center text-[10px] font-bold text-primary-600">
-                    {(canSeeFullProfile(p.id) ? p.full_name : p.username)?.[0]?.toUpperCase()}
+                    {(canSeeFullProfile(p) ? p.full_name : p.username)?.[0]?.toUpperCase()}
                   </div>
                 ))}
               </div>
@@ -281,7 +281,7 @@ export default function FloatingChat() {
                 {activePartner ? (
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20 text-xs font-bold text-primary-600">
-                      {(canSeeFullProfile(activePartner.id) ? activePartner.full_name : activePartner.username)?.[0]?.toUpperCase()}
+                      {(canSeeFullProfile(activePartner) ? activePartner.full_name : activePartner.username)?.[0]?.toUpperCase()}
                     </div>
                     <div>
                       <h4 className="font-bold text-[var(--r-text)] text-xs leading-tight">{displayName(activePartner)}</h4>
@@ -465,7 +465,7 @@ export default function FloatingChat() {
                         className="w-full p-3.5 text-left hover:bg-[var(--r-hover)]/50 transition-colors flex gap-2.5 items-center"
                       >
                         <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20 text-xs font-bold text-primary-600">
-                          {(canSeeFullProfile(c.partner.id) ? c.partner.full_name : c.partner.username)?.[0]?.toUpperCase()}
+                          {(canSeeFullProfile(c.partner) ? c.partner.full_name : c.partner.username)?.[0]?.toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-baseline mb-0.5">

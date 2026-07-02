@@ -12,8 +12,8 @@ export default function Members() {
   const [search, setSearch] = useState('')
   const [cityFilter, setCityFilter] = useState('')
   const [occupationFilter, setOccupationFilter] = useState('')
-  const [maritalFilter, setMaritalFilter] = useState('')
-  const [childrenFilter, setChildrenFilter] = useState('')
+  const [hobbyFilter, setHobbyFilter] = useState('')
+  const [interestFilter, setInterestFilter] = useState('')
   const [viewMode, setViewMode] = useState('list')
 
   useEffect(() => {
@@ -101,10 +101,10 @@ export default function Members() {
 
     const matchesCity = !cityFilter || m.city?.toLowerCase().includes(cityFilter.toLowerCase())
     const matchesOccupation = !occupationFilter || m.occupation?.toLowerCase().includes(occupationFilter.toLowerCase())
-    const matchesMarital = !maritalFilter || m.marital_status === maritalFilter
-    const matchesChildren = !childrenFilter || (childrenFilter === 'has_children' && m.children_count > 0)
+    const matchesHobby = !hobbyFilter || m.hobbies?.split(',').map(h => h.trim().toLowerCase()).includes(hobbyFilter.toLowerCase())
+    const matchesInterest = !interestFilter || m.interests?.split(',').map(i => i.trim().toLowerCase()).includes(interestFilter.toLowerCase())
 
-    return matchesSearch && matchesCity && matchesOccupation && matchesMarital && matchesChildren
+    return matchesSearch && matchesCity && matchesOccupation && matchesHobby && matchesInterest
   })
 
   // For geographic map count (apply filters except city to see density across all cities)
@@ -117,12 +117,28 @@ export default function Members() {
       m.hobbies?.toLowerCase().includes(query) ||
       m.interests?.toLowerCase().includes(query)
     const matchesOccupation = !occupationFilter || m.occupation?.toLowerCase().includes(occupationFilter.toLowerCase())
-    return matchesSearch && matchesOccupation
+    const matchesHobby = !hobbyFilter || m.hobbies?.split(',').map(h => h.trim().toLowerCase()).includes(hobbyFilter.toLowerCase())
+    const matchesInterest = !interestFilter || m.interests?.split(',').map(i => i.trim().toLowerCase()).includes(interestFilter.toLowerCase())
+    return matchesSearch && matchesOccupation && matchesHobby && matchesInterest
   })
 
   // Extract cities and occupations for filtering lists
   const uniqueCities = [...new Set(members.map(m => m.city).filter(Boolean))]
   const uniqueOccupations = [...new Set(members.map(m => m.occupation).filter(Boolean))]
+
+  // Extract unique hobbies/interests (case-insensitively deduped, split from the comma-separated fields)
+  const extractTags = (field) => {
+    const seen = new Map()
+    members.forEach(m => {
+      m[field]?.split(',').forEach(tag => {
+        const trimmed = tag.trim()
+        if (trimmed && !seen.has(trimmed.toLowerCase())) seen.set(trimmed.toLowerCase(), trimmed)
+      })
+    })
+    return [...seen.values()].sort((a, b) => a.localeCompare(b, 'tr'))
+  }
+  const uniqueHobbies = extractTags('hobbies')
+  const uniqueInterests = extractTags('interests')
 
   return (
     <div className="pb-8">
@@ -195,24 +211,22 @@ export default function Members() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <select
-              value={maritalFilter}
-              onChange={e => setMaritalFilter(e.target.value)}
+              value={hobbyFilter}
+              onChange={e => setHobbyFilter(e.target.value)}
               className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-xs text-[var(--r-text)] focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="">Tüm Medeni Durumlar</option>
-              <option value="Evli">Evli</option>
-              <option value="Bekar">Bekar</option>
-              <option value="İlişkisi Var">İlişkisi Var</option>
+              <option value="">Tüm Hobiler</option>
+              {uniqueHobbies.map(h => <option key={h} value={h}>{h}</option>)}
             </select>
           </div>
           <div>
             <select
-              value={childrenFilter}
-              onChange={e => setChildrenFilter(e.target.value)}
+              value={interestFilter}
+              onChange={e => setInterestFilter(e.target.value)}
               className="w-full border border-[var(--r-input-border)] bg-[var(--r-input)] rounded-xl px-3 py-2.5 text-xs text-[var(--r-text)] focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="">Aile Durumu (Tümü)</option>
-              <option value="has_children">Sadece Çocuklu (Ebeveyn)</option>
+              <option value="">Tüm İlgi Alanları</option>
+              {uniqueInterests.map(i => <option key={i} value={i}>{i}</option>)}
             </select>
           </div>
         </div>
@@ -257,10 +271,9 @@ export default function Members() {
             const canSeeName = canSeeField(m, 'full_name')
             const canSeeAge = canSeeField(m, 'age')
             const canSeeGender = canSeeField(m, 'gender')
-            const canSeeFamily = canSeeField(m, 'marital_status') || canSeeField(m, 'children_count')
             const canSeeHobbies = canSeeField(m, 'hobbies')
             const canSeeInterests = canSeeField(m, 'interests')
-            const anyExtraHidden = !canSeeAge || !canSeeGender || !canSeeFamily || !canSeeHobbies || !canSeeInterests
+            const anyExtraHidden = !canSeeAge || !canSeeGender || !canSeeHobbies || !canSeeInterests
 
             return (
               <div key={m.id} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 flex flex-col justify-between hover:bg-[var(--r-hover)] transition-colors duration-150">
@@ -281,7 +294,17 @@ export default function Members() {
                       >
                         {displayName(m)}
                       </button>
-                      <p className="text-xs text-[var(--r-meta)] truncate">@{m.username}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <p className="text-xs text-[var(--r-meta)] truncate">@{m.username}</p>
+                        {m.is_admin && (
+                          <span className="inline-flex items-center gap-0.5 bg-primary-500/10 text-primary-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-primary-500/20 shrink-0">
+                            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2l8 3.5v6c0 5-3.5 8.5-8 10.5-4.5-2-8-5.5-8-10.5v-6L12 2z" />
+                            </svg>
+                            Admin
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -298,18 +321,6 @@ export default function Members() {
                       <span>💼</span>
                       <span>{m.occupation || 'Belirtilmemiş'}</span>
                     </div>
-
-                    {canSeeFamily && (m.marital_status || (m.children_count !== undefined && m.children_count !== null)) && (
-                      <div className="flex items-center gap-1.5 text-primary-600 font-medium">
-                        <span>👪</span>
-                        <span>
-                          {[
-                            m.marital_status,
-                            m.children_count > 0 ? `${m.children_count} Çocuklu` : (m.children_count === 0 ? 'Çocuksuz' : null)
-                          ].filter(Boolean).join(' | ')}
-                        </span>
-                      </div>
-                    )}
 
                     {canSeeHobbies && m.hobbies && (
                       <div className="pt-2 border-t border-[var(--r-border)]">
@@ -356,8 +367,11 @@ export default function Members() {
                     {!rel && (
                       <button
                         onClick={() => sendRequest(m.id)}
-                        className="w-full bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold py-2 rounded-xl transition-colors"
+                        className="w-full bg-[var(--r-card)] border border-primary-500/40 text-primary-600 hover:bg-primary-500/[0.06] text-xs font-semibold py-2 rounded-xl transition-colors flex items-center justify-center gap-1.5"
                       >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
                         Arkadaş Ekle
                       </button>
                     )}

@@ -81,6 +81,46 @@ export default function Channels() {
 
   const rootChannels = channels.filter(ch => !ch.parent_id)
   const eligibleParents = rootChannels
+  const myChannels = rootChannels.filter(ch => followedChannels.includes(ch.id))
+  const exploreChannels = rootChannels.filter(ch => !followedChannels.includes(ch.id))
+
+  const renderChannelCard = (ch) => (
+    <div key={ch.id} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 hover:bg-[var(--r-hover)] transition-colors duration-150">
+      <div className="flex items-start justify-between gap-3">
+        <Link to={`/konular/${ch.id}`} className="flex-1 min-w-0">
+          <span className="inline-block text-[10px] bg-primary-500/10 text-primary-600 border border-primary-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider mb-2">
+            {ch.name.toLocaleUpperCase('tr-TR')}
+          </span>
+          {ch.description && <p className="text-xs text-[var(--r-meta)] mt-0.5 line-clamp-2 leading-relaxed">{ch.description}</p>}
+          {profile?.is_admin && (
+            <p className="text-[10px] text-[var(--r-meta)] mt-1.5">Oluşturan: {ch.profiles && displayName({ id: ch.created_by, ...ch.profiles })}</p>
+          )}
+        </Link>
+        <div className="flex items-center shrink-0 self-center">
+          <button
+            onClick={(e) => toggleFollow(ch.id, e)}
+            className={`text-[10px] px-2.5 py-1 rounded-full font-bold transition-all border shrink-0 mr-2 ${
+              followedChannels.includes(ch.id)
+                ? 'bg-primary-500/10 text-primary-600 border-primary-500/20 hover:bg-primary-500/[0.15]'
+                : 'bg-[var(--r-card)] text-[var(--r-meta)] border-[var(--r-border)] hover:border-primary-500/30 hover:text-primary-600'
+            }`}
+          >
+            {followedChannels.includes(ch.id) ? 'Katıldın ✓' : 'Katıl +'}
+          </button>
+          {profile?.is_admin && (
+            <button
+              onClick={() => handleDelete(ch.id)}
+              className="p-1.5 text-[var(--r-meta)] hover:text-red-500 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="pb-8">
@@ -113,49 +153,23 @@ export default function Channels() {
         <div className="flex justify-center py-12">
           <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
+      ) : rootChannels.length === 0 ? (
+        <div className="text-center py-16 text-[var(--r-meta)] bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)]">
+          <p className="text-sm">Henüz konu bulunmuyor.</p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {rootChannels.map(ch => (
-            <div key={ch.id} className="bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)] shadow-sm p-4 hover:bg-[var(--r-hover)] transition-colors duration-150">
-              <div className="flex items-start justify-between gap-3">
-                <Link to={`/konular/${ch.id}`} className="flex-1 min-w-0">
-                  <span className="inline-block text-[10px] bg-primary-500/10 text-primary-600 border border-primary-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider mb-2">
-                    {ch.name.toLocaleUpperCase('tr-TR')}
-                  </span>
-                  {ch.description && <p className="text-xs text-[var(--r-meta)] mt-0.5 line-clamp-2 leading-relaxed">{ch.description}</p>}
-                  {profile?.is_admin && (
-                    <p className="text-[10px] text-[var(--r-meta)] mt-1.5">Oluşturan: {ch.profiles && displayName({ id: ch.created_by, ...ch.profiles })}</p>
-                  )}
-                </Link>
-                <div className="flex items-center shrink-0 self-center">
-                  <button
-                    onClick={(e) => toggleFollow(ch.id, e)}
-                    className={`text-[10px] px-2.5 py-1 rounded-full font-bold transition-all border shrink-0 mr-2 ${
-                      followedChannels.includes(ch.id)
-                        ? 'bg-primary-500/10 text-primary-600 border-primary-500/20 hover:bg-primary-500/[0.15]'
-                        : 'bg-[var(--r-card)] text-[var(--r-meta)] border-[var(--r-border)] hover:border-primary-500/30 hover:text-primary-600'
-                    }`}
-                  >
-                    {followedChannels.includes(ch.id) ? 'Takip Ediliyor ✓' : 'Takip Et +'}
-                  </button>
-                  {profile?.is_admin && (
-                    <button
-                      onClick={() => handleDelete(ch.id)}
-                      className="p-1.5 text-[var(--r-meta)] hover:text-red-500 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
+        <div className="space-y-6">
+          {myChannels.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold text-[var(--r-meta)] uppercase tracking-wider px-1">Topluluklarım</h2>
+              {myChannels.map(renderChannelCard)}
             </div>
-          ))}
+          )}
 
-          {rootChannels.length === 0 && (
-            <div className="text-center py-16 text-[var(--r-meta)] bg-[var(--r-card)] rounded-2xl border border-[var(--r-border)]">
-              <p className="text-sm">Henüz konu bulunmuyor.</p>
+          {exploreChannels.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold text-[var(--r-meta)] uppercase tracking-wider px-1">Keşfet</h2>
+              {exploreChannels.map(renderChannelCard)}
             </div>
           )}
         </div>
