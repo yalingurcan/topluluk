@@ -5,6 +5,7 @@ import TopNav from './TopNav'
 import FloatingChat from './FloatingChat'
 import PWAInstallPrompt from './PWAInstallPrompt'
 import UserProfileModal from './UserProfileModal'
+import WelcomeModal from './WelcomeModal'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { supabase } from '../lib/supabase'
@@ -98,6 +99,7 @@ export default function Layout() {
         </div>
       </main>
       {profile && profile.status === 'approved' && <FloatingChat />}
+      {profile && profile.status === 'approved' && <WelcomeModal />}
       <BottomNav />
       <PWAInstallPrompt />
       <UserProfileModal />
